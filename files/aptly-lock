@@ -1,0 +1,24 @@
+#!/bin/bash
+## File maanged by puppet
+#  * Module: aptly_profile
+#  * File:   aptly-lock
+
+(
+	if ! flock -n 200; then
+		INODE="$( stat -c "%D:%i" "$(which aptly)" | sed 's/^\(..\)\(.*\)/\1:\2/' )"
+		LOCKS="$( grep " $INODE " /proc/locks )"
+		LOCKED="$( echo "$LOCKS" | grep -v ": -> " | awk '{print $5;}' )"
+		# ^^^^ Returs the PID of the flock process, which is gone by now... not very useful
+		BLOCKED="$( echo "$LOCKS" | grep ": -> " | awk '{print $6;}' )"
+		echo "Could not acquire lock to run aptly." >&2
+		if [ -n "$BLOCKED" ]; then
+			echo "$( echo "$BLOCKED" | wc -l ) other processes waiting for the lock" >&2
+		fi
+		echo -n "waiting for lock... " >&2
+		flock 200 # blocking
+		echo "done" >&2
+	fi
+
+	"$(which aptly)" "$@"
+
+) 200<"$(which aptly)"
