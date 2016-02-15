@@ -357,12 +357,6 @@ begin
 
 	vprint "Generating publishing points\n"
 	config.each_pair { |pub, c|
-		name = pub
-		if c.has_key?('name')
-			name = script(c['name'])
-		end
-		vprint "#{pub}: name=#{name}\n"
-
 		if not c.has_key?('components')
 			STDERR.puts "Publishing point `#{pub}` has no components, skipping"
 			next
@@ -371,6 +365,12 @@ begin
 		to_pub = Hash[ c['components'].map{ |comp,cont|
 			[comp, resolve_snapshot("#{pub}#{$separator}#{comp}", cont)]
 		}]
+
+		name = pub
+		if c.has_key?('name')
+			name = script(c['name'])
+		end
+		vprint "#{pub}: name=#{name}\n"
 
 		publish(name, to_pub)
 	}
