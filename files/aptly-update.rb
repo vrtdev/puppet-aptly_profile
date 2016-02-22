@@ -268,7 +268,7 @@ def resolve_snapshot(prefix, conf)
 		snapshot = merge(prefix, conf['merge'])
 
 	elsif conf.has_key?('repo')
-		snapshot = create_snapshot_repo(prefix, conf['repo'])
+		snapshot = create_snapshot_repo(conf['repo'], prefix)
 
 	else
 		STDERR.puts "#{prefix}: no recognized config, ignoring"
