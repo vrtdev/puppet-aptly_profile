@@ -357,7 +357,7 @@ begin
 
 	vprint "Generating publishing points\n"
 	config.each_pair { |pub, c|
-		vprint "#{pub}: finding out what should go in"
+		vprint "Generating publishing point #{pub}\n"
 
 		if not c.has_key?('components')
 			STDERR.puts "Publishing point `#{pub}` has no components, skipping"
