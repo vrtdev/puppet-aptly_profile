@@ -49,6 +49,16 @@
 #                                 # snapshots
 #       update: mirror            # Update these mirror(s) before running the
 #                                 # script
+# dabian/jessie-yesterday:
+#   companents:
+#     main:
+#       mirror: jessie-main
+#       lag: 86400s               # Use the jessie-main mirror, but from (at
+#                                 # least) 1 day ago
+#                                 # You can also specify "5v", to lag 5 versions
+#                                 # If not enough history is available, the
+#                                 # oldest version will be used and a warning
+#                                 # printed
 # local:
 #   components:
 #     main:
@@ -213,16 +223,15 @@ def drop_snapshot(name)
 
 end
 
-def snapshot_dedup(new_one, prefix)
-	previous_snapshot = $snapshots.select {|s| s =~ /^#{prefix}#{$separator}#{$separator}/ }.sort.last
-	if previous_snapshot.nil?
+def snapshot_dedup(new_one, old_one)
+	if old_one.nil?
 		return new_one
 	end
-	out = run($aptly_cmd, 'snapshot', 'diff', new_one, previous_snapshot)
+	out = run($aptly_cmd, 'snapshot', 'diff', new_one, old_one)
 	if out =~ /Snapshots are identical/
-		vprint "Snapshot '#{new_one}' is duplicate, replacing by '#{previous_snapshot}'\n"
+		vprint "Snapshot '#{new_one}' is duplicate, replacing by '#{old_one}'\n"
 		drop_snapshot(new_one)
-		return previous_snapshot
+		return old_one
 	else
 		return new_one
 	end
@@ -283,36 +292,77 @@ def resolve_snapshot(prefix, conf)
 	if conf.has_key?('keep')
 		keep = conf['keep']
 	end
+	lag = "0"
+	if conf.has_key?('lag')
+		lag = conf['lag']
+	end
+
+
+	existing_snapshots = $snapshots.select{ |s| s =~ /^#{prefix}#{$separator}#{$separator}/ }.sort
 
 	case type
 	when 'everytime'
 		# done
 
 	when 'once'
-		prev = $snapshots.select{ |s| s =~ /^#{prefix}#{$separator}#{$separator}/ }.last
+		prev = existing_snapshots[-1]
 		if not prev.nil?
 			vprint "'#{prefix}' type=once, using '#{prev}'\n"
 			drop_snapshot(snapshot)
-			snapshot = prev
+			snapshot = existing_snapshots.pop
 		end
 
 	else # and case 'change', which is default
 		STDERR.puts "#{prefix}: unrecognized type #{type}, defaulting to 'change'" if type != 'change'
-		dedup = snapshot_dedup(snapshot, prefix)
+		prev = existing_snapshots[-1]
+		dedup = snapshot_dedup(snapshot, prev)
 		if dedup != snapshot
 			snapshot = dedup
-			keep += 1 if keep >= 0 # keep one more, since we don't have a "new" copy
+			existing_snapshots.pop
 		end
 	end
 
+	if lag != "0" && lag != "0v" && lag != "0s"
+		if lag =~ /^(\d+)v$/ || lag.is_a?(Numeric)
+			lag = $1 if ! lag.is_a?(Numeric)
+			if ! existing_snapshots[-lag].nil?
+				snapshot = existing_snapshots[-lag]
+				existing_snapshots.pop(lag) # Don't consider these to be "old"
+				vprint "#{prefix}: lag #{lag} versions => #{snapshot}\n"
+			else
+				n = existing_snapshots.length
+				snapshot = existing_snapshots[0]
+				existing_snapshots = [] # Don't consider these to be "old"
+				vprint "#{prefix}: lag #{lag} versions => NOT ENOUGH HISTORY, using #{snapshot} (#{n} versions)\n"
+			end
+
+		elsif lag =~ /^(\d+)s$/
+			lag = $1.to_i
+			pivot = Time.new - lag
+			pivot = pivot.strftime($timefmt)
+			# Filter all newer items (these are not "old")
+			oldest = existing_snapshots.first || snapshot
+			existing_snapshots = existing_snapshots.select{ |s| s =~ /#{$separator}#{$separator}(.*)$/; $1 <= pivot }
+			if existing_snapshots.length > 0
+				snapshot = existing_snapshots.pop
+				vprint "#{prefix}: lag #{lag} seconds (<= #{pivot}): using #{snapshot}\n"
+			else
+				snapshot = oldest
+				vprint "#{prefix}: lag #{lag} seconds (<= #{pivot}) => NOT ENOUGH HISTORY, using #{snapshot}\n"
+			end
+
+		else
+			dprint "#{prefix}: lag: unknown lag: #{lag}\n"
+
+		end
+	end
 
 	if keep >= 0
-		dprint "Cleaning up '#{prefix}': keeping #{keep} old snapshots\n"
-		prev = $snapshots.select{ |s| s =~ /^#{prefix}#{$separator}#{$separator}/ }.sort
-		while prev.length > keep.to_i
+		dprint "Cleaning up '#{prefix}': keeping #{keep} old snapshots. Currently #{existing_snapshots.length} old snapshots\n"
+		while existing_snapshots.length > keep
 			vprint "snapshot '#{prev[0]}': to remove\n"
-			$ss_to_drop.push(prev[0])
-			prev.shift
+			$ss_to_drop.push(existing_snapshots[0])
+			existing_snapshots.shift
 		end
 	end
 
@@ -349,7 +399,8 @@ begin
 	config = YAML.load_file('publish.yaml')
 
 	vprint "Getting current state\n"
-	$now = Time.new.strftime("%Y-%m-%dT%H-%M-%S") # Make sure these sort correctly
+	$timefmt = "%Y-%m-%dT%H-%M-%S" # Make sure these sort correctly
+	$now = Time.new.strftime($timefmt)
 	$mirrors = run($aptly_cmd, 'mirror', 'list', '-raw').lines.map(&:chomp)
 	$snapshots = run($aptly_cmd, 'snapshot', 'list', '-raw').lines.map(&:chomp)
 	$publish = run($aptly_cmd, 'publish', 'list', '-raw').lines.map(&:chomp)
