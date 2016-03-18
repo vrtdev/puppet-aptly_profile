@@ -92,8 +92,8 @@ class aptly_profile(
     default_mods  => false,
   }
 
-  class { 'apache::mod::dir': }
-  class { 'apache::mod::autoindex': }
+  class { '::apache::mod::dir': }
+  class { '::apache::mod::autoindex': }
 
   ::apache::vhost { 'aptly':
     port           => 80,
@@ -110,7 +110,7 @@ class aptly_profile(
   # We can't use the `gpg_key::keypair` defined type, because we need access
   # to the $key variable to create our `apt::key` resource
 
-  include gpg_key # To make the parent directory
+  include ::gpg_key # To make the parent directory
   $basename = '/etc/gpg_keys/aptly'
 
   $existing_key = gpg_find_key($::gpg_keys, {
