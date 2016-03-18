@@ -3,6 +3,7 @@
 #  * Module: aptly_profile
 #  * File:   aptly-update.rb
 
+# rubocop:disable Metrics/LineLength
 # Updates the published repositories per config file
 #
 # Config file syntax:
@@ -73,45 +74,43 @@
 #     done
 #
 # General remark on names: Don't use spaces, comma's, single or double quotes
-
+# rubocop:enable Metrics/LineLength
 
 $debug = false
-$separator = " " # A character that is guaranteed not apear in mirror, snapshot & publish names
+$separator = ' ' # A character that is guaranteed not apear in mirror, snapshot & publish names
 
 $aptly_cmd = '/usr/bin/aptly-lock'
 
 require 'open3'
 require 'yaml'
 
-
 class RunError < RuntimeError
-  attr :command
-  attr :exitstatus
-  attr :output
+  attr_reader :command
+  attr_reader :exitstatus
+  attr_reader :output
   def initialize(cmd, es, out)
     @command = cmd
     @exitstatus = es
     @output = out
   end
+
   def message
-    "Command `" + @command.map {|a| "'#{a}'" }.join(' ') + "` failed with " +
+    'Command `' + @command.map { |a| "'#{a}'" }.join(' ') + '` failed with ' \
       "exit code #{@exitstatus}"
   end
 end
 
 def vprint(*args)
-  printf (" " * caller.size) + args.join('')
-end
-def dprint(*args)
-  if $debug
-    printf (" " * caller.size) + args.join('')
-  end
+  printf (' ' * caller.size) + args.join('')
 end
 
+def dprint(*args)
+  printf (' ' * caller.size) + args.join('') if $debug
+end
 
 def run(*cmd)
-  dprint "Running command `#{ cmd.map{|e| "'#{e}'"}.join(' ') }`\n"
-  Open3.popen2e(*cmd) { |i,o,t|
+  dprint "Running command `#{cmd.map { |e| "'#{e}'" }.join(' ')}`\n"
+  Open3.popen2e(*cmd) do |i, o, t|
     dprint "PID=#{t.pid}\n"
     i.close
     output = o.read
@@ -124,28 +123,26 @@ def run(*cmd)
 
     dprint output
     output
-  }
+  end
 end
 
 def script(cmd)
   dprint "Running command `#{cmd}`\n"
-  Open3.popen3(cmd) { |i,o,e,t|
+  Open3.popen3(cmd) do |i, o, e, t|
     dprint "PID=#{t.pid}\n"
     i.close
-    outs = [o,e]
-    output = ""
-    mixed = ""
-    until outs.find { |f| !f.eof }.nil? do
+    outs = [o, e]
+    output = ''
+    mixed = ''
+    until outs.find { |f| !f.eof }.nil?
       ready_read, ready_write, ready_error = IO.select(outs)
       begin
-        if ready_read.find {|f| f == o }
+        if ready_read.find { |f| f == o }
           temp = o.read_nonblock(4096)
           output += temp
           mixed += temp
         end
-        if ready_read.find {|f| f == e }
-          mixed += e.read_nonblock(4096)
-        end
+        mixed += e.read_nonblock(4096) if ready_read.find { |f| f == e }
       rescue EOFError => e
         # ignore
       end
@@ -161,22 +158,22 @@ def script(cmd)
     dprint mixed
     dprint "Returned: #{output}\n"
     output
-  }
+  end
 end
 
 $updated_mirrors = {}
 def update_mirror(mirror)
-  if $updated_mirrors.has_key?(mirror)
+  if $updated_mirrors.key?(mirror)
     dprint "Updating mirror #{mirror}... already done\n"
   else
     vprint "Updating mirror #{mirror}\n"
     run($aptly_cmd, 'mirror', 'update', mirror)
-    $updated_mirrors[mirror] = "done"
+    $updated_mirrors[mirror] = 'done'
   end
 end
 
 def create_snapshot_mirror(mirror, prefix)
-  update_mirror( mirror )
+  update_mirror(mirror)
   snapshot = "#{prefix}#{$separator}#{$separator}#{$now}"
   run($aptly_cmd, 'snapshot', 'create', snapshot,
       'from', 'mirror', mirror
@@ -198,7 +195,7 @@ def drop_snapshot(name)
   vprint "Droping snapshot '#{name}'\n"
 
   descr = run($aptly_cmd, 'snapshot', 'show', name).lines.map(&:chomp)
-           .select{ |l| l =~ /^Description: / }.first
+                                                   .find { |l| l =~ /^Description: / }
   descr.sub!(/^Description: /, '')
 
   begin
@@ -216,17 +213,14 @@ def drop_snapshot(name)
   if descr =~ /^Merged from sources: /
     descr.sub!(/^Merged from sources: /, '')
     dprint "'#{name}' is a merge commit, descending\n"
-    descr.split(/, /).each { |s|
-      drop_snapshot( s.sub(/^'(.*)'$/, '\1') )
-    }
+    descr.split(/, /).each do |s|
+      drop_snapshot(s.sub(/^'(.*)'$/, '\1'))
+    end
   end
-
 end
 
 def snapshot_dedup(new_one, old_one)
-  if old_one.nil?
-    return new_one
-  end
+  return new_one if old_one.nil?
   out = run($aptly_cmd, 'snapshot', 'diff', new_one, old_one)
   if out =~ /Snapshots are identical/
     vprint "Snapshot '#{new_one}' is duplicate, replacing by '#{old_one}'\n"
@@ -242,9 +236,9 @@ def merge(prefix, sources)
 
   snapshot = "#{prefix}#{$separator}#{$separator}#{$now}"
 
-  sources = sources.map.with_index(0){ |s,i|
+  sources = sources.map.with_index(0) do |s, i|
     resolve_snapshot("#{prefix}#{$separator}#{i}", s)
-  }
+  end
 
   run($aptly_cmd, 'snapshot', 'merge', snapshot, *sources)
 
@@ -255,28 +249,26 @@ def resolve_snapshot(prefix, conf)
   vprint "Resolving what should go in '#{prefix}'\n"
   snapshot = nil
 
-  if conf.has_key?('snapshot')
+  if conf.key?('snapshot')
     snapshot = conf['snapshot']
 
-  elsif conf.has_key?('script')
-    if conf.has_key?('update')
+  elsif conf.key?('script')
+    if conf.key?('update')
       to_update = conf['update']
-      if to_update.class == String
-        to_update = [ to_update ]
-      end
-      to_update.each { |m|
+      to_update = [to_update] if to_update.class == String
+      to_update.each do |m|
         update_mirror(m)
-      }
+      end
     end
     snapshot = script(conf['script'])
 
-  elsif conf.has_key?('mirror')
+  elsif conf.key?('mirror')
     snapshot = create_snapshot_mirror(conf['mirror'], prefix)
 
-  elsif conf.has_key?('merge')
+  elsif conf.key?('merge')
     snapshot = merge(prefix, conf['merge'])
 
-  elsif conf.has_key?('repo')
+  elsif conf.key?('repo')
     snapshot = create_snapshot_repo(conf['repo'], prefix)
 
   else
@@ -285,20 +277,13 @@ def resolve_snapshot(prefix, conf)
   end
 
   type = 'change'
-  if conf.has_key?('type')
-    type = conf['type']
-  end
+  type = conf['type'] if conf.key?('type')
   keep = -1
-  if conf.has_key?('keep')
-    keep = conf['keep']
-  end
-  lag = "0"
-  if conf.has_key?('lag')
-    lag = conf['lag']
-  end
+  keep = conf['keep'] if conf.key?('keep')
+  lag = '0'
+  lag = conf['lag'] if conf.key?('lag')
 
-
-  existing_snapshots = $snapshots.select{ |s| s =~ /^#{prefix}#{$separator}#{$separator}/ }.sort
+  existing_snapshots = $snapshots.select { |s| s =~ /^#{prefix}#{$separator}#{$separator}/ }.sort
 
   case type
   when 'everytime'
@@ -306,7 +291,7 @@ def resolve_snapshot(prefix, conf)
 
   when 'once'
     prev = existing_snapshots[-1]
-    if not prev.nil?
+    unless prev.nil?
       vprint "'#{prefix}' type=once, using '#{prev}'\n"
       drop_snapshot(snapshot)
       snapshot = existing_snapshots.pop
@@ -322,10 +307,10 @@ def resolve_snapshot(prefix, conf)
     end
   end
 
-  if lag != "0" && lag != "0v" && lag != "0s"
+  if lag != '0' && lag != '0v' && lag != '0s'
     if lag =~ /^(\d+)v$/ || lag.is_a?(Numeric)
-      lag = $1 if ! lag.is_a?(Numeric)
-      if ! existing_snapshots[-lag].nil?
+      lag = Regexp.last_match(1) unless lag.is_a?(Numeric)
+      if !existing_snapshots[-lag].nil?
         snapshot = existing_snapshots[-lag]
         existing_snapshots.pop(lag) # Don't consider these to be "old"
         vprint "#{prefix}: lag #{lag} versions => #{snapshot}\n"
@@ -337,12 +322,12 @@ def resolve_snapshot(prefix, conf)
       end
 
     elsif lag =~ /^(\d+)s$/
-      lag = $1.to_i
+      lag = Regexp.last_match(1).to_i
       pivot = Time.new - lag
       pivot = pivot.strftime($timefmt)
       # Filter all newer items (these are not "old")
       oldest = existing_snapshots.first || snapshot
-      existing_snapshots = existing_snapshots.select{ |s| s =~ /#{$separator}#{$separator}(.*)$/; $1 <= pivot }
+      existing_snapshots = existing_snapshots.select { |s| s =~ /#{$separator}#{$separator}(.*)$/; Regexp.last_match(1) <= pivot }
       if existing_snapshots.length > 0
         snapshot = existing_snapshots.pop
         vprint "#{prefix}: lag #{lag} seconds (<= #{pivot}): using #{snapshot}\n"
@@ -373,9 +358,7 @@ end
 def publish(path, components)
   # Publish-or-switch wrapper
   prefix, distribution = path.match(/(?:(.*)\/)?([^\/]+)/).captures
-  if prefix == nil
-    prefix = "."
-  end
+  prefix = '.' if prefix.nil?
 
   if $publish.include?("#{prefix} #{distribution}")
     vprint "publish point '#{path}' => ('#{prefix}', '#{distribution}') to be switched\n"
@@ -399,7 +382,7 @@ begin
   config = YAML.load_file('publish.yaml')
 
   vprint "Getting current state\n"
-  $timefmt = "%Y-%m-%dT%H-%M-%S" # Make sure these sort correctly
+  $timefmt = '%Y-%m-%dT%H-%M-%S' # Make sure these sort correctly
   $now = Time.new.strftime($timefmt)
   $mirrors = run($aptly_cmd, 'mirror', 'list', '-raw').lines.map(&:chomp)
   $snapshots = run($aptly_cmd, 'snapshot', 'list', '-raw').lines.map(&:chomp)
@@ -407,40 +390,38 @@ begin
   $ss_to_drop = []
 
   vprint "Generating publishing points\n"
-  config.each_pair { |pub, c|
+  config.each_pair do |pub, c|
     vprint "Generating publishing point #{pub}\n"
 
-    if not c.has_key?('components')
+    unless c.key?('components')
       STDERR.puts "Publishing point `#{pub}` has no components, skipping"
       next
     end
 
-    to_pub = Hash[ c['components'].map{ |comp,cont|
+    to_pub = Hash[c['components'].map do |comp, cont|
       [comp, resolve_snapshot("#{pub}#{$separator}#{comp}", cont)]
-    }]
+    end]
 
     name = pub
-    if c.has_key?('name')
-      name = script(c['name'])
-    end
+    name = script(c['name']) if c.key?('name')
     vprint "#{pub}: name=#{name}\n"
 
     publish(name, to_pub)
-  }
+  end
 
   vprint "Dropping old snapshots\n"
-  $ss_to_drop.each { |s|
+  $ss_to_drop.each do |s|
     vprint "Dropping '#{s}'\n"
     drop_snapshot(s)
-  }
+  end
 
   vprint "Cleaning up DB\n"
   run($aptly_cmd, 'db', 'cleanup')
 
 rescue RunError => e
-  STDERR.puts "Running command failed"
-  STDERR.puts "   " + e.command.map {|a| "'#{e}'" }.join(' ')
-  STDERR.puts "Output:"
+  STDERR.puts 'Running command failed'
+  STDERR.puts '   ' + e.command.map { |_a| "'#{e}'" }.join(' ')
+  STDERR.puts 'Output:'
   STDERR.puts e.output
   STDERR.puts " Exit code: #{e.exitstatus}"
 end
