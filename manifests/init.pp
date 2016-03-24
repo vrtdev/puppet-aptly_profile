@@ -1,6 +1,13 @@
-# Aptly profile
+#
 # Installs an aptly server on the host, mirrors the repos listed in hiera, and
 # serves the (manually) published repos via apache
+#
+# @param aptly_user User aptly is running as.
+# @param aptly_group Group aptly is running as.
+# @param aptly_homedir Homedir for aptly.
+# @param trusted_keys Hash with trusted keys.
+# @param publish Hash with the publish configuration.
+#
 class aptly_profile(
   $aptly_user = 'aptly',
   $aptly_group = 'users',
