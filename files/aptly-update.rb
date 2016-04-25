@@ -75,9 +75,9 @@
 # General remark on names: Don't use spaces, comma's, single or double quotes
 
 require 'yaml'
-require_relative 'IndentLogger'
-require_relative 'Aptly'
-require_relative 'AptlyUpdate'
+require_relative 'indent_logger'
+require_relative 'aptly'
+require_relative 'aptly_update'
 
 @logger = IndentLogger.new(Logger.new(STDOUT))
 @logger.level = Logger::INFO

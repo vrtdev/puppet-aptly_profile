@@ -3,9 +3,9 @@
 # rubocop:disable Style/Documentation
 # rubocop:disable Style/EmptyLines
 
-require_relative 'Aptly'
-require_relative 'IndentLogger'
-require_relative 'AptlyUpdate'
+require_relative 'aptly'
+require_relative 'indent_logger'
+require_relative 'aptly_update'
 
 @logger = IndentLogger.new(Logger.new(STDOUT))
 @logger.level = Logger::INFO

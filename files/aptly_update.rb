@@ -1,4 +1,4 @@
-require_relative 'Aptly'
+require_relative 'aptly'
 require 'logger'
 
 def default_value(value, default)
