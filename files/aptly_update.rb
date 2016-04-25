@@ -20,7 +20,9 @@ class AptlyUpdate # rubocop:disable Metrics/ClassLength
     @logger = Logger.new(nil)
   end
 
+  # rubocop:disable Metrics/LineLength
   def resolve_snapshot_initial(prefix, conf) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    # rubocop:enable Metrics/LineLength
     if conf.key?('snapshot')
       @logger.info "'#{prefix}': explicitly set to '#{conf['snapshot']}'"
       return conf['snapshot']
