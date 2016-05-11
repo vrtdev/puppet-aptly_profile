@@ -75,6 +75,24 @@ class aptly_profile(
     mode   => '0755',
     source => 'puppet:///modules/aptly_profile/aptly-update.rb',
   }
+  file { "${aptly_homedir}/aptly_update.rb":
+    owner  => $aptly_user,
+    group  => $aptly_group,
+    mode   => '0644',
+    source => 'puppet:///modules/aptly_profile/aptly_update.rb',
+  }
+  file { "${aptly_homedir}/aptly.rb":
+    owner  => $aptly_user,
+    group  => $aptly_group,
+    mode   => '0644',
+    source => 'puppet:///modules/aptly_profile/aptly.rb',
+  }
+  file { "${aptly_homedir}/indent_logger.rb":
+    owner  => $aptly_user,
+    group  => $aptly_group,
+    mode   => '0644',
+    source => 'puppet:///modules/aptly_profile/indent_logger.rb',
+  }
 
   cron { 'aptly-update':
     command => "${aptly_homedir}/aptly-update.rb >/dev/null",
