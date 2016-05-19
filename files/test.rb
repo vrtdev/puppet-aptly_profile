@@ -68,9 +68,7 @@ end
                           'mirror' => 'm'
                         }
                       },
-                      'name' => 'echo "script-name"'
-                     )
-
+                      'name' => 'echo "script-name"')
 
 class AptlyMock3 < Aptly
   def snapshots

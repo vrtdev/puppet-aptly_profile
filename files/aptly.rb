@@ -144,8 +144,7 @@ class Aptly # rubocop:disable Metrics/ClassLength
 
     update_mirror(mirror)
     run(@aptly_cmd, 'snapshot', 'create', snapshot,
-        'from', 'mirror', mirror
-       )
+        'from', 'mirror', mirror)
 
     snapshot
   end
@@ -155,8 +154,7 @@ class Aptly # rubocop:disable Metrics/ClassLength
     @logger.info "Creating snapshot from repo \"#{repo}\" at \"#{snapshot}\""
 
     run(@aptly_cmd, 'snapshot', 'create', snapshot,
-        'from', 'repo', repo
-       )
+        'from', 'repo', repo)
 
     snapshot
   end
@@ -231,16 +229,14 @@ class Aptly # rubocop:disable Metrics/ClassLength
       run(@aptly_cmd, 'publish', 'switch',
           '-component=' + components.keys.join(','),
           distribution, prefix,
-          *components.values
-         )
+          *components.values)
     else
       @logger.info "publish point '#{path}' => ('#{prefix}', '#{distribution}') to be created"
       run(@aptly_cmd, 'publish', 'snapshot',
           '-distribution=' + distribution,
           '-component=' + components.keys.join(','),
           *components.values,
-          prefix
-         )
+          prefix)
     end
   end
   # rubocop:enable Metrics/AbcSize
