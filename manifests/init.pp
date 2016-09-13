@@ -7,6 +7,8 @@
 # @param aptly_homedir Homedir for aptly.
 # @param trusted_keys Hash with trusted keys.
 # @param publish Hash with the publish configuration.
+# @param mirrors Hash with the mirrors to configure.
+# @param aptly_environment An array with custom environment settings for the cron job.
 #
 class aptly_profile(
   $aptly_user = 'aptly',
@@ -14,6 +16,8 @@ class aptly_profile(
   $aptly_homedir = '/data/aptly',
   $trusted_keys = {},
   $publish = {},
+  $mirrors = {},
+  $aptly_environment = [],
 ){
 
   # User, group and homedir
@@ -42,22 +46,25 @@ class aptly_profile(
     require => User[$aptly_user],
   }
 
-
   # Aptly itself
   ##############
   class { '::aptly':
-    user    => $aptly_user,
-    repo    => false, # don't include aptly.info repo
-    config  => {
+    user          => $aptly_user,
+    repo          => false, # don't include aptly.info repo
+    config        => {
       rootDir => $aptly_homedir,
     },
-    require => File[$aptly_homedir],
+    aptly_mirrors => {},
+    require       => File[$aptly_homedir],
   }
   # ::aptly will read the mirrors to make from hiera
   # You will still need to manually update them (or wait for the cron below to
   # run
 
   create_resources('::aptly_profile::trusted_key', $trusted_keys)
+
+  # Pass through the aptly_environment to the execs used for mirroring
+  create_resources('::aptly::mirror', $mirrors, { 'environment' => $aptly_environment })
 
   file { '/usr/bin/aptly-lock':
     owner  => 'root',
@@ -95,11 +102,12 @@ class aptly_profile(
   }
 
   cron { 'aptly-update':
-    command => "${aptly_homedir}/aptly-update.rb >/dev/null",
-    user    => $aptly_user,
-    require => User[$aptly_user],
-    hour    => 3,
-    minute  => 17,
+    command     => "${aptly_homedir}/aptly-update.rb >/dev/null",
+    user        => $aptly_user,
+    require     => User[$aptly_user],
+    hour        => 3,
+    minute      => 17,
+    environment => $aptly_environment,
   }
 
   file { "${aptly_homedir}/publish.yaml":
