@@ -234,6 +234,7 @@ class Aptly # rubocop:disable Metrics/ClassLength
       @logger.info "publish point '#{path}' => ('#{prefix}', '#{distribution}') to be created"
       run(@aptly_cmd, 'publish', 'snapshot',
           '-distribution=' + distribution,
+          '-architectures=all',
           '-component=' + components.keys.join(','),
           *components.values,
           prefix)
