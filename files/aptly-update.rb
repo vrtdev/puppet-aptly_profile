@@ -75,12 +75,29 @@
 # General remark on names: Don't use spaces, comma's, single or double quotes
 
 require 'yaml'
+require 'optparse'
 require_relative 'indent_logger'
 require_relative 'aptly'
 require_relative 'aptly_update'
 
+@options = {}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{__FILE__} [options] <publishing point>"
+
+  opts.on('-v', '--[no-]verbose', 'Run verbosely') do |v|
+    @options[:verbose] = v
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+
 @logger = IndentLogger.new(Logger.new(STDOUT))
-@logger.level = Logger::INFO
+@logger.level = @options[:verbose] ? Logger::DEBUG : Logger::INFO
 
 @aptly = Aptly.new('  ', '/usr/bin/aptly-lock')
 @aptly.logger = @logger
@@ -90,13 +107,17 @@ require_relative 'aptly_update'
 begin
   filename = 'publish.yaml'
   @logger.info "Generating publishing points for `#{filename}`"
-  config = YAML.load_file(filename)
-
-  config.each_pair do |pub, c|
-    @aptly_update.publish(pub, c)
+  config = YAML.load_file(filename) || {}
+  if config.empty?
+    @logger.info "No publishing points found in `#{filename}`. Exiting."
+  else
+    config.each_pair do |pub, c|
+      if ARGV.include?(pub)
+        @aptly_update.publish(pub, c)
+      end
+    end
+    @aptly.cleanup
   end
-
-  @aptly.cleanup
 
 rescue Aptly::RunError => e
   STDERR.puts 'Running command failed'
