@@ -141,8 +141,11 @@ class aptly_profile(
   }
 
   $publish.each |String $name, Hash $config| {
+    # lint:ignore:variable_scope
+    ## see https://github.com/rodjek/puppet-lint/issues/464
     if $config['instant_publish'] {
       $instant_publish = $config['instant_publish']
+      # lint:endignore
     }
     else {
       $instant_publish = false
