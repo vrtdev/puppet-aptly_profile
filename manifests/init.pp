@@ -11,13 +11,13 @@
 # @param aptly_environment An array with custom environment settings for the cron job.
 #
 class aptly_profile(
-  $aptly_user = 'aptly',
-  $aptly_group = 'users',
-  $aptly_homedir = '/data/aptly',
-  $trusted_keys = {},
-  $publish = {},
-  $mirrors = {},
-  $aptly_environment = [],
+  String $aptly_user = 'aptly',
+  String $aptly_group = 'users',
+  String $aptly_homedir = '/data/aptly',
+  Hash $trusted_keys = {},
+  Hash $publish = {},
+  Hash $mirrors = {},
+  Array[String] $aptly_environment = [],
 ){
 
   # User, group and homedir
