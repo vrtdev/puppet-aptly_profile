@@ -124,6 +124,10 @@ class aptly_profile(
     source => 'puppet:///modules/aptly_profile/publish_d-header',
   }
 
+  file {"${aptly_homedir}/publish.yaml":
+    ensure => 'absent',
+  }
+
   cron { 'aptly-update':
     command     => "${aptly_homedir}/aptly-update.rb >/dev/null",
     user        => $aptly_user,
