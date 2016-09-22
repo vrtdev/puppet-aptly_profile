@@ -1,9 +1,9 @@
+# Creates a new publishing point with the possiblity to instantly update it.
 #
-#
-#
+# @param config Hash with configuration for the aptly-update.rb script
+# @param instant_publish Boolean indicating to instantly run the aptly-update.rb script for this publishing point.
 define aptly_profile::publish(
   Hash $config,
-  String $order = '10',
   Boolean $instant_publish = false,
 ) {
 
