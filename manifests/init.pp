@@ -73,14 +73,19 @@ class aptly_profile(
     source => 'puppet:///modules/aptly_profile/aptly-lock',
   }
 
-
   # Automatic management (cron)
   #############################
   file { "${aptly_homedir}/aptly-update.rb":
-    owner  => $aptly_user,
-    group  => $aptly_group,
-    mode   => '0755',
-    source => 'puppet:///modules/aptly_profile/aptly-update.rb',
+    owner   => $aptly_user,
+    group   => $aptly_group,
+    mode    => '0755',
+    source  => 'puppet:///modules/aptly_profile/aptly-update.rb',
+    require => File[
+      "${aptly_homedir}/aptly_update.rb",
+      "${aptly_homedir}/aptly.rb",
+      "${aptly_homedir}/indent_logger.rb",
+      '/usr/bin/aptly-lock',
+    ],
   }
   file { "${aptly_homedir}/aptly_update.rb":
     owner  => $aptly_user,
@@ -104,7 +109,10 @@ class aptly_profile(
   cron { 'aptly-update':
     command     => "${aptly_homedir}/aptly-update.rb >/dev/null",
     user        => $aptly_user,
-    require     => User[$aptly_user],
+    require     => [
+      User[$aptly_user],
+      File["${aptly_homedir}/aptly-update.rb"],
+    ],
     hour        => 3,
     minute      => 17,
     environment => $aptly_environment,
