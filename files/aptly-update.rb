@@ -89,12 +89,11 @@ OptionParser.new do |opts|
     @options[:verbose] = v
   end
 
-  opts.on_tail("-h", "--help", "Show this message") do
+  opts.on_tail('-h', '--help', 'Show this message') do
     puts opts
     exit
   end
 end.parse!
-
 
 @logger = IndentLogger.new(Logger.new(STDOUT))
 @logger.level = @options[:verbose] ? Logger::DEBUG : Logger::INFO
@@ -104,21 +103,29 @@ end.parse!
 @aptly_update = AptlyUpdate.new(' ', @aptly)
 @aptly_update.logger = @logger
 
-begin
-  filename = 'publish.yaml'
-  @logger.info "Generating publishing points for `#{filename}`"
-  config = YAML.load_file(filename) || {}
-  if config.empty?
-    @logger.info "No publishing points found in `#{filename}`. Exiting."
+def publish_yaml_config(filename)
+  if File.exist?(filename)
+    @logger.info "Generating publishing points for `#{filename}`"
+    publish_name = File.basename(filename, '.yaml')
+    config = YAML.load_file(filename) || {}
+    @aptly_update.publish(publish_name, config)
   else
-    config.each_pair do |pub, c|
-      if ARGV.include?(pub)
-        @aptly_update.publish(pub, c)
-      end
-    end
-    @aptly.cleanup
+    STDERR.puts "Could not find the requested file #{filename}."
+    exit 1
   end
+end
 
+begin
+  if ARGV.empty?
+    Dir.glob('publish.d/*.yaml').each do |f|
+      publish_yaml_config(f)
+    end
+  else
+    ARGV.each do |req|
+      publish_yaml_config("publish.d/#{req}.yaml")
+    end
+  end
+  @aptly.cleanup
 rescue Aptly::RunError => e
   STDERR.puts 'Running command failed'
   STDERR.puts '   ' + e.command.map { |_a| "'#{e}'" }.join(' ')

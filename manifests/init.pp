@@ -106,23 +106,47 @@ class aptly_profile(
     source => 'puppet:///modules/aptly_profile/indent_logger.rb',
   }
 
+  $publish_d = "${aptly_homedir}/publish.d"
+
+  file {$publish_d:
+    ensure => 'directory',
+    owner  => $aptly_user,
+    group  => $aptly_group,
+    mode   => '0755',
+    purge  => true,
+  }
+
+  file {"${publish_d}/00_CONTENTS_WARNING":
+    ensure => 'file',
+    owner  => $aptly_user,
+    group  => $aptly_group,
+    mode   => '0644',
+    source => 'puppet:///modules/aptly_profile/publish_d-header',
+  }
+
   cron { 'aptly-update':
     command     => "${aptly_homedir}/aptly-update.rb >/dev/null",
     user        => $aptly_user,
     require     => [
       User[$aptly_user],
-      File["${aptly_homedir}/aptly-update.rb"],
+      File["${aptly_homedir}/aptly-update.rb", $publish_d],
     ],
     hour        => 3,
     minute      => 17,
     environment => $aptly_environment,
   }
 
-  file { "${aptly_homedir}/publish.yaml":
-    owner   => $aptly_user,
-    group   => $aptly_group,
-    mode    => '0644',
-    content => inline_template("<%= @publish.to_hash.to_yaml %>\n"),
+  $publish.each |String $name, Hash $config| {
+    if $config['instant_publish'] {
+      $instant_publish = $config['instant_publish']
+    }
+    else {
+      $instant_publish = false
+    }
+    aptly_profile::publish {$name:
+      config          => $config,
+      instant_publish => $instant_publish,
+    }
   }
 
 
