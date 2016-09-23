@@ -219,7 +219,7 @@ class Aptly # rubocop:disable Metrics/ClassLength
 
   # rubocop:disable Metrics/AbcSize
   # rubocop:disable Metrics/MethodLength
-  def publish(path, components)
+  def publish(path, components, architectures)
     # Publish-or-switch wrapper
     prefix, distribution = path.match(%r{(?:(.*)/)?([^/]+)}).captures
     prefix = '.' if prefix.nil?
@@ -234,7 +234,7 @@ class Aptly # rubocop:disable Metrics/ClassLength
       @logger.info "publish point '#{path}' => ('#{prefix}', '#{distribution}') to be created"
       run(@aptly_cmd, 'publish', 'snapshot',
           '-distribution=' + distribution,
-          '-architectures=all',
+          '-architectures=' + architectures.join(','),
           '-component=' + components.keys.join(','),
           *components.values,
           prefix)

@@ -161,6 +161,8 @@ class AptlyUpdate # rubocop:disable Metrics/ClassLength
       return
     end
 
+    architectures = config['architectures'] || ['all']
+
     to_pub = Hash[
       config['components'].map do |component, cconfig|
         [component, resolve_snapshot("#{publishing_point}#{@separator}#{component}", cconfig)]
@@ -171,8 +173,8 @@ class AptlyUpdate # rubocop:disable Metrics/ClassLength
     # That way, the name-script is run with mirrors already updated
     name = publishing_point
     name = @aptly.script(config['name']) if config.key?('name')
-    @logger.info "Publishing point #{publishing_point}: publishing as '#{name}'"
 
-    @aptly.publish(name, to_pub)
+    @logger.info "Publishing point #{publishing_point}: publishing as '#{name}'"
+    @aptly.publish(name, to_pub, architectures)
   end
 end
