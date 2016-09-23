@@ -106,7 +106,7 @@ end.parse!
 def publish_yaml_config(filename)
   if File.exist?(filename)
     @logger.info "Generating publishing points for `#{filename}`"
-    publish_name = File.basename(filename, '.yaml')
+    publish_name = File.basename(filename, '.yaml').gsub('__', '/')
     config = YAML.load_file(filename) || {}
     @aptly_update.publish(publish_name, config)
   else
@@ -122,6 +122,7 @@ begin
     end
   else
     ARGV.each do |req|
+      req.gsub!('/', '__')
       publish_yaml_config("publish.d/#{req}.yaml")
     end
   end

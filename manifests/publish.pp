@@ -7,7 +7,12 @@ define aptly_profile::publish(
   Boolean $instant_publish = false,
 ) {
 
-  file {"${::aptly_profile::publish_d}/${name}.yaml":
+  ## We are using this as an escape character of a sort.
+  validate_re($name, '__', 'Double underscores are not allowed in names')
+
+  $yaml_name = regsubst($name, '/', '__', 'G')
+
+  file {"${::aptly_profile::publish_d}/${yaml_name}.yaml":
     ensure  => 'file',
     owner   => $::aptly_profile::aptly_user,
     group   => $::aptly_profile::aptly_group,
@@ -24,7 +29,7 @@ define aptly_profile::publish(
       cwd         => $::aptly_profile::aptly_homedir,
       require     => File[
         "${::aptly_profile::aptly_homedir}/aptly-update.rb",
-        "${::aptly_profile::publish_d}/${name}.yaml",
+        "${::aptly_profile::publish_d}/${yaml_name}.yaml",
       ],
       subscribe   => File["${::aptly_profile::publish_d}/${name}.yaml"],
     }
