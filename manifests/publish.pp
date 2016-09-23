@@ -8,7 +8,9 @@ define aptly_profile::publish(
 ) {
 
   ## We are using this as an escape character of a sort.
-  validate_re($name, '__', 'Double underscores are not allowed in names')
+  if ($name =~ /__/) {
+    fail("Double underscores are not allowed in names: ${name}")
+  }
 
   $yaml_name = regsubst($name, '/', '__', 'G')
 
