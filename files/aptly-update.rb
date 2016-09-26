@@ -122,8 +122,8 @@ begin
     end
   else
     ARGV.each do |req|
-      req.gsub!('/', '__')
-      publish_yaml_config("publish.d/#{req}.yaml")
+      freq = req.gsub('/', '__')
+      publish_yaml_config("publish.d/#{freq}.yaml")
     end
   end
   @aptly.cleanup
