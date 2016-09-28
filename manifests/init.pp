@@ -8,6 +8,7 @@
 # @param trusted_keys Hash with trusted keys.
 # @param publish Hash with the publish configuration.
 # @param mirrors Hash with the mirrors to configure.
+# @param repos Hash with the repositories to create.
 # @param aptly_environment An array with custom environment settings for the cron job.
 #
 class aptly_profile(
@@ -17,6 +18,7 @@ class aptly_profile(
   Hash $trusted_keys = {},
   Hash $publish = {},
   Hash $mirrors = {},
+  Hash $repos = {},
   Array[String] $aptly_environment = [],
 ){
 
@@ -65,6 +67,8 @@ class aptly_profile(
 
   # Pass through the aptly_environment to the execs used for mirroring
   create_resources('::aptly::mirror', $mirrors, { 'environment' => $aptly_environment })
+
+  create_resources('::aptly::repo', $repos)
 
   file { '/usr/bin/aptly-lock':
     owner  => 'root',
