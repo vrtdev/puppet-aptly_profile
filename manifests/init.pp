@@ -9,6 +9,10 @@
 # @param publish Hash with the publish configuration.
 # @param mirrors Hash with the mirrors to configure.
 # @param repos Hash with the repositories to create.
+# @param mirror_defaults Hash with default properties to set on mirrors.
+#   Note, we map the environment property to `aptly_environment` by default even if it is
+#   not defined in the mirror_defaults.
+# @param repo_defaults Hash with default properties to set on repos.
 # @param aptly_environment An array with custom environment settings for the cron job.
 #
 class aptly_profile(
@@ -19,6 +23,8 @@ class aptly_profile(
   Hash $publish = {},
   Hash $mirrors = {},
   Hash $repos = {},
+  Hash $mirror_defaults = {},
+  Hash $repo_defaults = {},
   Array[String] $aptly_environment = [],
 ){
 
@@ -65,10 +71,13 @@ class aptly_profile(
 
   create_resources('::aptly_profile::trusted_key', $trusted_keys)
 
-  # Pass through the aptly_environment to the execs used for mirroring
-  create_resources('::aptly::mirror', $mirrors, { 'environment' => $aptly_environment })
+  $_mirror_defaults = merge({'environment' => $aptly_environment}, $mirror_defaults)
 
-  create_resources('::aptly::repo', $repos)
+
+  # Pass through the aptly_environment to the execs used for mirroring
+  create_resources('::aptly::mirror', $mirrors, $_mirror_defaults)
+
+  create_resources('::aptly::repo', $repos, $repo_defaults)
 
   file { '/usr/bin/aptly-lock':
     owner  => 'root',
