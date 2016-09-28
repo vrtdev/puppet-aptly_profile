@@ -1,0 +1,12 @@
+.*.swp
+.*.swo
+Gemfile.lock
+.bundle/
+environments/
+vendor/
+tmp/
+
+# puppetlabs-strings ignores:
+doc/
+.yardoc/
+.yardwarns
