@@ -51,7 +51,7 @@ class Aptly # rubocop:disable Metrics/ClassLength
       o.close
       t.join
       @logger.debug "RV=#{t.value.exitstatus}"
-      if t.value.exitstatus != 0
+      if t.value.exitstatus.nonzero?
         raise RunError.new(cmd, t.value.exitstatus, output)
       end
 
@@ -95,7 +95,7 @@ class Aptly # rubocop:disable Metrics/ClassLength
 
       t.join
       @logger.debug "RV=#{t.value.exitstatus}"
-      if t.value.exitstatus != 0
+      if t.value.exitstatus.nonzero?
         raise RunError.new(cmd, t.value.exitstatus, mixed)
       end
 
@@ -181,12 +181,11 @@ class Aptly # rubocop:disable Metrics/ClassLength
       end
     end
 
-    if descr =~ /^Merged from sources: /
-      descr.sub!(/^Merged from sources: /, '')
-      @logger.debug "'#{name}' is a merge commit, descending"
-      descr.split(/, /).each do |s|
-        drop_snapshot(s.sub(/^'(.*)'$/, '\1'))
-      end
+    return unless descr =~ /^Merged from sources: /
+    descr.sub!(/^Merged from sources: /, '')
+    @logger.debug "'#{name}' is a merge commit, descending"
+    descr.split(/, /).each do |s|
+      drop_snapshot(s.sub(/^'(.*)'$/, '\1'))
     end
   end
   # rubocop:enable Metrics/AbcSize
