@@ -153,22 +153,29 @@ class aptly_profile(
     environment => $aptly_environment,
   }
 
-  $publish.each |String $name, Hash $config| {
+  $publish.each |String $publish_name, Hash $config| {
     # lint:ignore:variable_scope
     ## see https://github.com/rodjek/puppet-lint/issues/464
-    if $config['instant_publish'] {
+
+    if has_key($config, 'instant_publish') {
       $instant_publish = $config['instant_publish']
       # lint:endignore
     }
     else {
       $instant_publish = false
     }
-    aptly_profile::publish {$name:
+    aptly_profile::publish {$publish_name:
       config          => $config,
       instant_publish => $instant_publish,
     }
-  }
 
+    $ifrepo = find_key($config, 'repo')
+    if ($ifrepo != undef) {
+      Aptly_profile::Publish[$publish_name] {
+        require => Aptly::Repo[$ifrepo],
+      }
+    }
+  }
 
   # Publishing
   ############
