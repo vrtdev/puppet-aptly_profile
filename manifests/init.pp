@@ -198,11 +198,11 @@ class aptly_profile(
   # Repo Singing Key management
   #############################
 
-  # Mostly copy-paste from `gpg_key::keypair`
-  # We can't use the `gpg_key::keypair` defined type, because we need access
+  # Mostly copy-paste from `keypair::gpg_keypair`
+  # We can't use the `keypair::gpg_keypair` defined type, because we need access
   # to the $key variable to create our `apt::key` resource
 
-  include ::gpg_key # To make the parent directory
+  include ::keypair::gpg # To make the parent directory
   $basename = '/etc/gpg_keys/aptly'
 
   $existing_key = gpg_find_key($::gpg_keys, {
