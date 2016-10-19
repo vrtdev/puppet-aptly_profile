@@ -6,7 +6,6 @@ module Puppet
         :find_key,
         type: :rvalue,
         doc: <<-'ENDHEREDOC') do |args|
-
             Recursivly searches a hash for a key.
 
             If a key has been found, the value of the matching key will be returned.
