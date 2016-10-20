@@ -227,6 +227,7 @@ class Aptly # rubocop:disable Metrics/ClassLength
       @logger.info "publish point '#{path}' => ('#{prefix}', '#{distribution}') to be switched"
       run(@aptly_cmd, 'publish', 'switch',
           '-component=' + components.keys.join(','),
+          '-force-overwrite=true',
           distribution, prefix,
           *components.values)
     else
