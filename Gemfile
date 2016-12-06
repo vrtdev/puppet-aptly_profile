@@ -25,7 +25,7 @@ group :development, :test do
   gem 'puppet-lint', '~> 2'
 end
 group :doc do
-  gem 'puppet-strings', :git => 'https://github.com/puppetlabs/puppetlabs-strings.git'
+  gem 'puppet-strings', '~> 1.0.0'
   gem 'redcarpet'
   gem 'rdoc'
 end

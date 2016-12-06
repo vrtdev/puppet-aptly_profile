@@ -3,6 +3,8 @@ AllCops:
   TargetRubyVersion: 1.9
   Include:
     - ./**/*.rb
+    - Rakefile
+    - Gemfile
   Exclude:
     - vendor/**/*
     - .vendor/**/*

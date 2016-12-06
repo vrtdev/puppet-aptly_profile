@@ -2,6 +2,12 @@ require 'puppetlabs_spec_helper/rake_tasks'
 require 'puppet-lint/tasks/puppet-lint'
 require 'rubocop/rake_task'
 
+Rake::Task['rubocop'].clear
+RuboCop::RakeTask.new(:rubocop) do |task|
+  # Bug where rubocop searches paths recursivly. Ignoring this config.
+  task.options = ['--config','.rubocop.yml']
+end
+
 JENKINS_TASKS = [
   'syntax',
   'lint',
