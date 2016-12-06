@@ -2,14 +2,14 @@ require: rubocop-rspec
 AllCops:
   TargetRubyVersion: 1.9
   Include:
-    - ./**/*.rb
-    - Rakefile
-    - Gemfile
+    - '**/*.rb'
+    - 'Rakefile'
+    - 'Gemfile'
   Exclude:
-    - vendor/**/*
-    - .vendor/**/*
-    - pkg/**/*
-    - spec/fixtures/**/*
+    - 'vendor/**/*'
+    - '.vendor/**/*'
+    - 'pkg/**/*'
+    - 'spec/fixtures/**/*'
 
 # Allow us to nest rspec tests.
 RSpec/NestedGroups:
