@@ -9,7 +9,7 @@ RuboCop::RakeTask.new(:rubocop) do |task|
   task.options = ['--config', '.rubocop.yml']
 end
 
-JENKINS_TASKS = %w(syntax lint rubocop).freeze
+JENKINS_TASKS = %w(syntax lint rubocop spec).freeze
 
 namespace :jenkins do
   task :all do
