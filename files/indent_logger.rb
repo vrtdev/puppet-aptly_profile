@@ -12,7 +12,7 @@ class IndentLogger < Logger
     @correction = correction
   end
 
-  def add(severity, message = nil, progname = nil, &block) # rubocop:disable Metrics/MethodLength
+  def add(severity, message = nil, progname = nil, &block)
     severity ||= UNKNOWN
     return true if severity < @level
     if message.nil?

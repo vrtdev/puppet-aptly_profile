@@ -7,7 +7,7 @@ def default_value(value, default)
 end
 
 # Application logic to convert YAML in to aptly commands
-class AptlyUpdate # rubocop:disable Metrics/ClassLength
+class AptlyUpdate
   attr_accessor :logger
   attr_reader :aptly
 
@@ -20,8 +20,7 @@ class AptlyUpdate # rubocop:disable Metrics/ClassLength
     @logger = Logger.new(nil)
   end
 
-  # rubocop:disable Metrics/LineLength
-  def resolve_snapshot_initial(prefix, conf) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def resolve_snapshot_initial(prefix, conf)
     # rubocop:enable Metrics/LineLength
     if conf.key?('snapshot')
       @logger.info "'#{prefix}': explicitly set to '#{conf['snapshot']}'"
@@ -65,13 +64,13 @@ class AptlyUpdate # rubocop:disable Metrics/ClassLength
     snapshot
   end
 
-  def resolve_snapshot_lag_time(prefix, existing_snapshots, lag) # rubocop:disable Metrics/MethodLength
+  def resolve_snapshot_lag_time(prefix, existing_snapshots, lag)
     pivot = Time.new - lag
     pivot = pivot.strftime(@aptly.timefmt)
 
     # remove all candidates more recent than pivot
     candidates = existing_snapshots.select do |s|
-      s =~ /#{@separator}#{@separator}(.*)$/
+      s =~ %r{#{@separator}#{@separator}(.*)$}
       Regexp.last_match(1) <= pivot
     end
 
@@ -86,17 +85,17 @@ class AptlyUpdate # rubocop:disable Metrics/ClassLength
     snapshot
   end
 
-  def resolve_snapshot_lag(prefix, existing_snapshots, lag) # rubocop:disable Metrics/MethodLength, Metrics/CyclomaticComplexity
+  def resolve_snapshot_lag(prefix, existing_snapshots, lag)
     return existing_snapshots[-1] if lag == '0' || lag == '0v' || lag == '0s'
 
     case lag
     when Numeric
       return resolve_snapshot_lag_version(prefix, existing_snapshots, lag)
 
-    when /^(\d+)v$/
+    when %r{^(\d+)v$}
       return resolve_snapshot_lag_version(prefix, existing_snapshots, Regexp.last_match(1).to_i)
 
-    when /^(\d+)s$/
+    when %r{^(\d+)s$}
       return resolve_snapshot_lag_time(prefix, existing_snapshots, Regexp.last_match(1).to_i)
 
     else
@@ -120,14 +119,14 @@ class AptlyUpdate # rubocop:disable Metrics/ClassLength
     end
   end
 
-  def resolve_snapshot(prefix, conf) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity
+  def resolve_snapshot(prefix, conf)
     type = default_value(conf['type'], 'change')
     keep = default_value(conf['keep'], -1)
     lag  = default_value(conf['lag'], '0')
 
     @logger.info "Resolving what should go in '#{prefix}'"
 
-    existing_snapshots = @aptly.snapshots.select { |s| s =~ /^#{prefix}#{@separator}#{@separator}/ }.sort
+    existing_snapshots = @aptly.snapshots.select { |s| s =~ %r{^#{prefix}#{@separator}#{@separator}} }.sort
     if type == 'once' && existing_snapshots.length
       snapshot = existing_snapshots[-1]
       @logger.info "#{prefix} resolved to #{snapshot}"
@@ -153,7 +152,7 @@ class AptlyUpdate # rubocop:disable Metrics/ClassLength
   end
 
   # Main method: publish the given configuration at the given location
-  def publish(publishing_point, config) # rubocop:disable Metrics/MethodLength
+  def publish(publishing_point, config)
     @logger.info "Publishing point #{publishing_point}: starting"
 
     unless config.key?('components')
