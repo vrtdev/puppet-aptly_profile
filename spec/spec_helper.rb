@@ -2,6 +2,6 @@
 require 'puppetlabs_spec_helper/module_spec_helper'
 
 # put local configuration and setup into spec_helper_local
-if File.exist?(File.expand_path(File.dirname(__FILE__), 'spec_helper_local.rb'))
+if File.exist?(File.expand_path('spec_helper_local.rb', File.dirname(__FILE__)))
   require_relative 'spec_helper_local'
 end
