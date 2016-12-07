@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-
-# rubocop:disable Style/Documentation
 # rubocop:disable Style/EmptyLines
 
 require_relative 'aptly'
@@ -130,7 +128,7 @@ class AptlyMock4 < Aptly
   end
 
   def drop_snapshot(s)
-    raise "dropping wrong snapshot #{s}" unless s =~ /^mirror-keep main  __/
+    raise "dropping wrong snapshot #{s}" unless s =~ %r{^mirror-keep main  __}
     @dropped += 1
   end
 
@@ -253,7 +251,7 @@ end
 
 
 class AptlyMock9 < Aptly
-  def initialize(*rest) # rubocop:disable Metrics/AbcSize
+  def initialize(*rest)
     super(*rest)
     # rubocop:disable Style/ExtraSpacing, Style/SpaceAroundOperators
     @snapshots = [
@@ -300,7 +298,7 @@ end
 
 
 class AptlyMock10 < Aptly
-  def initialize(*rest) # rubocop:disable Metrics/AbcSize
+  def initialize(*rest)
     super(*rest)
     # rubocop:disable Style/ExtraSpacing, Style/SpaceAroundOperators
     @snapshots = [

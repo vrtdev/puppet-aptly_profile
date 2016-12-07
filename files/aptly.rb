@@ -2,7 +2,7 @@ require 'open3'
 require 'logger'
 
 # Wrapper class around aptly binary
-class Aptly # rubocop:disable Metrics/ClassLength
+class Aptly
   attr_reader :separator, :timefmt
   attr_accessor :logger
 
@@ -40,8 +40,6 @@ class Aptly # rubocop:disable Metrics/ClassLength
   # In case of a command failure (non-0 exit code), throw a RunError with all
   # details
   #
-  # rubocop:disable Metrics/AbcSize
-  # rubocop:disable Metrics/MethodLength
   def run(*cmd)
     @logger.debug "Running command `#{cmd.map { |e| "'#{e}'" }.join(' ')}`"
     Open3.popen2e(*cmd) do |i, o, t|
@@ -68,10 +66,8 @@ class Aptly # rubocop:disable Metrics/ClassLength
   # the string "##APTLY##" (without quotes) will be replaced with the aptly
   # command that is configured for the Aptly-object
   #
-  # rubocop:disable Metrics/AbcSize
-  # rubocop:disable Metrics/MethodLength
   def script(cmd)
-    cmd.gsub!(/##APTLY##/, @aptly_cmd)
+    cmd.gsub!(%r{##APTLY##}, @aptly_cmd)
     @logger.debug "Running command `#{cmd}`"
     Open3.popen3(cmd) do |i, o, e, t|
       @logger.debug "PID=#{t.pid}"
@@ -159,33 +155,31 @@ class Aptly # rubocop:disable Metrics/ClassLength
     snapshot
   end
 
-  # rubocop:disable Metrics/AbcSize
-  # rubocop:disable Metrics/MethodLength
   def drop_snapshot(name)
     @logger.info "Dropping snapshot \"#{name}\""
 
-    descr = run(@aptly_cmd, 'snapshot', 'show', name)
-            .lines.map(&:chomp)
-            .find { |l| l =~ /^Description: / }
-    descr.sub!(/^Description: /, '')
+    descr = run(@aptly_cmd, 'snapshot', 'show', name).
+            lines.map(&:chomp).
+            find { |l| l =~ %r{^Description: } }
+    descr.sub!(%r{^Description: }, '')
 
     begin
       run(@aptly_cmd, 'snapshot', 'drop', name)
     rescue RunError => e
-      if e.output =~ /^ERROR: unable to drop: snapshot is published/
+      if e.output =~ %r{^ERROR: unable to drop: snapshot is published}
         @logger.warn "Snapshot '#{name}' is published somewhere else, retaining"
-      elsif e.output =~ /^ERROR: won't delete snapshot that was used as source for other snapshots/
+      elsif e.output =~ %r{^ERROR: won't delete snapshot that was used as source for other snapshots}
         @logger.warn "Snapshot '#{name}' is merged somewhere else, retaining"
       else
         raise
       end
     end
 
-    return unless descr =~ /^Merged from sources: /
-    descr.sub!(/^Merged from sources: /, '')
+    return unless descr =~ %r{^Merged from sources: }
+    descr.sub!(%r{^Merged from sources: }, '')
     @logger.debug "'#{name}' is a merge commit, descending"
-    descr.split(/, /).each do |s|
-      drop_snapshot(s.sub(/^'(.*)'$/, '\1'))
+    descr.split(%r{, }).each do |s|
+      drop_snapshot(s.sub(%r{^'(.*)'$}, '\1'))
     end
   end
   # rubocop:enable Metrics/AbcSize
@@ -195,7 +189,7 @@ class Aptly # rubocop:disable Metrics/ClassLength
   # Return true if they differ
   def snapshot_diff(a, b)
     out = run(@aptly_cmd, 'snapshot', 'diff', a, b)
-    out !~ /Snapshots are identical/
+    out !~ %r{Snapshots are identical}
   end
 
   def snapshot_dedup(new_one, old_one)
@@ -216,8 +210,6 @@ class Aptly # rubocop:disable Metrics/ClassLength
     snapshot
   end
 
-  # rubocop:disable Metrics/AbcSize
-  # rubocop:disable Metrics/MethodLength
   def publish(path, components, architectures)
     # Publish-or-switch wrapper
     prefix, distribution = path.match(%r{(?:(.*)/)?([^/]+)}).captures
