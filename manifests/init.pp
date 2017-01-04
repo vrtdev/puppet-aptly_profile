@@ -205,7 +205,7 @@ class aptly_profile(
   include ::keypair::gpg # To make the parent directory
   $basename = '/etc/gpg_keys/aptly'
 
-  $existing_key = gpg_find_key($::gpg_keys, {
+  $existing_key = find_key($::gpg_keys, {
       'secret_present' => true,
       'basename'       => 'aptly',
   })
