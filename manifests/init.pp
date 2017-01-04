@@ -14,6 +14,7 @@
 #   not defined in the mirror_defaults.
 # @param repo_defaults Hash with default properties to set on repos.
 # @param aptly_environment An array with custom environment settings for the cron job.
+# @param publish_defaults A hash with default properties to set on publishing points.
 #
 class aptly_profile(
   String $aptly_user = 'aptly',
@@ -25,6 +26,7 @@ class aptly_profile(
   Hash $repos = {},
   Hash $mirror_defaults = {},
   Hash $repo_defaults = {},
+  Hash $publish_defaults = {},
   Array[String] $aptly_environment = [],
 ){
 
