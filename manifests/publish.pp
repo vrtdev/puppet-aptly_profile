@@ -7,6 +7,8 @@ define aptly_profile::publish(
   Boolean $instant_publish = false,
 ) {
 
+  $config_defaults = $::aptly_profile::publish_defaults
+
   ## We are using this as an escape character of a sort.
   if ($name =~ /__/) {
     fail("Double underscores are not allowed in names: ${name}")
@@ -14,11 +16,13 @@ define aptly_profile::publish(
 
   $yaml_name = regsubst($name, '/', '__', 'G')
 
+  $config_hash = merge($config_defaults, $config)
+
   file {"${::aptly_profile::publish_d}/${yaml_name}.yaml":
     ensure  => 'file',
     owner   => $::aptly_profile::aptly_user,
     group   => $::aptly_profile::aptly_group,
-    content => inline_template('<%= @config.to_hash.to_yaml %>'),
+    content => inline_template('<%= @config_hash.to_hash.to_yaml %>'),
   }
 
   if $instant_publish {
