@@ -20,6 +20,7 @@ class aptly_profile(
   String $aptly_user = 'aptly',
   String $aptly_group = 'users',
   String $aptly_homedir = '/data/aptly',
+  String $aptly_shell = '/bin/bash',
   Hash $trusted_keys = {},
   Hash $publish = {},
   Hash $mirrors = {},
@@ -36,6 +37,7 @@ class aptly_profile(
     ensure => present,
     gid    => $aptly_group,
     home   => $aptly_homedir,
+    shell  => $aptly_shell,
   }
 
   group {$aptly_group:
