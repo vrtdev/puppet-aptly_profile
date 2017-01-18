@@ -1,6 +1,6 @@
 {
   "name": "vrtdev-aptly_profile",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "VRT",
   "summary": "Wrapper arround the aptly module for easier management",
   "license": "MIT",
