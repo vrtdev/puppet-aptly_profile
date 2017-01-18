@@ -5,6 +5,7 @@
 # @param aptly_user User aptly is running as.
 # @param aptly_group Group aptly is running as.
 # @param aptly_homedir Homedir for aptly.
+# @param aptly_shell Shell for user aptly.
 # @param trusted_keys Hash with trusted keys.
 # @param publish Hash with the publish configuration.
 # @param mirrors Hash with the mirrors to configure.
