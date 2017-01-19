@@ -199,6 +199,16 @@ class aptly_profile(
     manage_docroot => false,
   }
 
+  # Cleanup script
+  ################
+
+  file { "${aptly_homedir}/cleanup_repo.sh":
+    ensure => file,
+    owner  => $aptly_user,
+    group  => $aptly_group,
+    mode   => '0755',
+    source => 'puppet:///modules/aptly_profile/cleanup_repo.sh',
+  }
 
   # Repo Singing Key management
   #############################
