@@ -2,6 +2,7 @@ require 'puppetlabs_spec_helper/rake_tasks'
 require 'puppet-syntax/tasks/puppet-syntax'
 require 'puppet-lint/tasks/puppet-lint'
 require 'rubocop/rake_task'
+require 'puppet-strings/tasks/generate'
 
 Rake::Task['rubocop'].clear
 RuboCop::RakeTask.new(:rubocop) do |task|
