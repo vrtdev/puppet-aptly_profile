@@ -1,6 +1,6 @@
 {
   "name": "vrtdev-aptly_profile",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "VRT",
   "summary": "Wrapper arround the aptly module for easier management",
   "license": "MIT",
@@ -8,9 +8,18 @@
   "project_page": "https://github.com/vrtdev/puppet-aptly_profile",
   "issues_url": "https://github.com/vrtdev/puppet-aptly_profile/issues",
   "dependencies": [
-    {"name":"puppetlabs-stdlib","version_requirement":">= 4.13.1 < 5.0.0"},
-    {"name":"gdsoperations-aptly","version_requirement":">= 0.8.0 < 1.0.0"},
-    {"name":"dpcops-keypair","version_requirement":">= 0.1.0 < 1.0.0"}
+    {
+      "name": "puppetlabs-stdlib",
+      "version_requirement": ">= 4.13.1 < 5.0.0"
+    },
+    {
+      "name": "gdsoperations-aptly",
+      "version_requirement": ">= 0.8.0 < 1.0.0"
+    },
+    {
+      "name": "dpcops-keypair",
+      "version_requirement": ">= 0.1.0 < 1.0.0"
+    }
   ],
   "data_provider": null
 }
