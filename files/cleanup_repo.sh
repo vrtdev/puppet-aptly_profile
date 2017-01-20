@@ -66,7 +66,12 @@ else
   syserr "You are using an old getopt version $(getopt -V)";
 fi;
 
-TEMP=`getopt -o -r:p:k:d:n:h --long repository:,package:,keep:,days:,noop -n "$0" -- "$@":,help -n "$0" -- "$@"`;
+if GETOPT_TEMP=$( getopt -o -r:p:k:d:n:h --long repository:,package:,keep:,days:,noop -n "$0":,help -n "$0" -- "$@" ); then
+  eval set -- "${GETOPT_TEMP}"
+else
+  _help
+  exit 64
+fi
 
 if [[ $? != 0 ]]; then
   syserr "Error parsing arguments"
@@ -76,8 +81,8 @@ while [ $# -gt 0 ]; do
   case "$1" in
     -r|--repository)    REPO="$2"; shift;;
 
-		-p|--package)I      PACKAGE="$2"; shift;;
-		-k|--keep)          KEEP="$2"; shift;;
+    -p|--package)       PACKAGE="$2"; shift;;
+    -k|--keep)          KEEP="$2"; shift;;
     -d|--days)          DAYS="$2"; shift;;
     -n|--noop)          PRECMD="/bin/echo"; shift;;
 
