@@ -2,26 +2,30 @@
 # Installs an aptly server on the host, mirrors the repos listed in hiera, and
 # serves the (manually) published repos via apache
 #
-# @param aptly_user User aptly is running as.
-# @param aptly_group Group aptly is running as.
-# @param aptly_homedir Homedir for aptly.
-# @param aptly_shell Shell for user aptly.
-# @param trusted_keys Hash with trusted keys.
-# @param publish Hash with the publish configuration.
-# @param mirrors Hash with the mirrors to configure.
-# @param repos Hash with the repositories to create.
-# @param mirror_defaults Hash with default properties to set on mirrors.
+# @param aptly_user         User aptly is running as.
+# @param aptly_group        Group aptly is running as.
+# @param aptly_homedir      Homedir for aptly.
+# @param aptly_shell        Shell for user aptly.
+# @param cleanup_script     String with path to cleanup script
+# @param cleanup_defaults   String with default options to pass on to a cleanup for a repo
+# @param trusted_keys       Hash with trusted keys.
+# @param publish            Hash with the publish configuration.
+# @param mirrors            Hash with the mirrors to configure.
+# @param repos              Hash with the repositories to create.
+# @param mirror_defaults    Hash with default properties to set on mirrors.
 #   Note, we map the environment property to `aptly_environment` by default even if it is
 #   not defined in the mirror_defaults.
-# @param repo_defaults Hash with default properties to set on repos.
-# @param aptly_environment An array with custom environment settings for the cron job.
-# @param publish_defaults A hash with default properties to set on publishing points.
+# @param repo_defaults      Hash with default properties to set on repos.
+# @param aptly_environment  An array with custom environment settings for the cron job.
+# @param publish_defaults   A hash with default properties to set on publishing points.
 #
 class aptly_profile(
   String $aptly_user = 'aptly',
   String $aptly_group = 'users',
   String $aptly_homedir = '/data/aptly',
   String $aptly_shell = '/bin/bash',
+  String $cleanup_script = "${aptly_homedir}/cleanup_repo.sh",
+  String $cleanup_defaults = '--keep 5 --days 3650 --package all --noop',
   Hash $trusted_keys = {},
   Hash $publish = {},
   Hash $mirrors = {},
@@ -82,7 +86,57 @@ class aptly_profile(
   # Pass through the aptly_environment to the execs used for mirroring
   create_resources('::aptly::mirror', $mirrors, $_mirror_defaults)
 
-  create_resources('::aptly::repo', $repos, $repo_defaults)
+  $cleanup_cronjob = "${aptly_homedir}/cron_cleanup_repo.sh"
+
+  concat { $cleanup_cronjob:
+    ensure => present,
+    mode   => '0755',
+  }
+
+  concat::fragment { "cron_cleanup_repo_header":
+    target  => $cleanup_cronjob,
+    order   => 0,
+    content => '#!/bin/bash
+#
+# This file is managed by puppet and build from concat fragments in aptly_profile
+#
+',
+  }
+
+  # Filter out our cleanup options, which are used only for the cronjob and not the repo resource
+  $repos.each |String $repo_name, Hash $repo_config| {
+    if has_key($repo_config, 'cleanup_options') {
+      $filtered_repo_config = delete_regex($repo_config, 'cleanup_options')
+      concat::fragment { "${repo_name}_cleanup":
+        target  => $cleanup_cronjob,
+        order   => 20,
+        content => "${cleanup_script} --repo ${repo_name} ${repo_config['cleanup_options']}\n",
+      }
+    }
+    else {
+      $filtered_repo_config = $repo_config
+      concat::fragment { "${repo_name}_cleanup":
+        target  => $cleanup_cronjob,
+        order   => 20,
+        content => "${cleanup_script} --repo ${repo_name} ${cleanup_defaults}\n",
+      }
+    }
+
+    $combined_repo_config = merge($filtered_repo_config, $repo_defaults)
+
+    # Create aptly repo
+    ::aptly::repo { $repo_name:
+      * => $combined_repo_config,
+    }
+  }
+
+  # Cronjob to cleanup repo
+  cron { "auto cleanup repos":
+    user    => $aptly_user,
+    hour    => '22',
+    minute  => '15',
+    command => $cleanup_cronjob,
+  }
 
   file { '/usr/bin/aptly-lock':
     owner  => 'root',
@@ -199,6 +253,15 @@ class aptly_profile(
     manage_docroot => false,
   }
 
+  # Cleanup script
+  ################
+  file { $cleanup_script:
+    ensure => file,
+    owner  => $aptly_user,
+    group  => $aptly_group,
+    mode   => '0755',
+    source => 'puppet:///modules/aptly_profile/cleanup_repo.sh',
+  }
 
   # Repo Singing Key management
   #############################
