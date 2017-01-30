@@ -20,7 +20,7 @@ PACKAGE=all
 KEEP=15
 DAYS=3650
 FILE_PATH="/data/aptly/public"
-PRE_RUN=""
+PRECMD=""
 
 ## Functions
 _help() {
@@ -46,7 +46,7 @@ cleanup() {
   local PKG_NAME=$2
   local PKG_VERSION=$3
 
-  ${PRERUN} aptly repo remove ${REPO} "Name (${PKG_NAME}), Version (<= ${PKG_VERSION})"
+  ${PRECMD} aptly repo remove ${REPO} "Name (${PKG_NAME}), Version (<= ${PKG_VERSION})"
   DELETED='yes'
 }
 
