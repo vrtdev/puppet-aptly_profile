@@ -1,7 +1,7 @@
 {
-  "name": "vrtdev-aptly_profile",
-  "version": "0.2.3",
-  "author": "VRT",
+  "name": "dpcops-aptly_profile",
+  "version": "0.3.0",
+  "author": "VRT DPCOPS",
   "summary": "Wrapper arround the aptly module for easier management",
   "license": "MIT",
   "source": "https://github.com/vrtdev/puppet-aptly_profile",
@@ -19,6 +19,10 @@
     {
       "name": "dpcops-keypair",
       "version_requirement": ">= 0.1.0 < 1.0.0"
+    },
+    {
+      "name": "dpcops-vrtlib",
+      "version_requirement": ">= 0.3.0 < 1.0.0"
     }
   ],
   "data_provider": null
