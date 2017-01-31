@@ -11,9 +11,10 @@ AllCops:
     - 'pkg/**/*'
     - 'spec/fixtures/**/*'
 
-# Allow us to nest rspec tests.
-RSpec/NestedGroups:
-  MaxNesting: 3
+# Ignore block length for spec tests.
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
 
 # Method length is not necessarily an indicator of code quality
 Metrics/MethodLength:
@@ -61,6 +62,10 @@ Style/ClosingParenthesisIndentation:
   Enabled: False
 
 # RSpec
+# Allow us to nest rspec tests.
+RSpec/NestedGroups:
+  Max: 3
+
 # We don't use rspec in this way
 RSpec/DescribeClass:
   Enabled: False

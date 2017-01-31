@@ -23,8 +23,8 @@ group :development, :test do
   gem 'puppet-lint', '~> 2'
   gem 'puppet-syntax'
   gem 'puppetlabs_spec_helper', '>= 1.2.1'
-  gem 'rubocop'
-  gem 'rubocop-rspec'
+  gem 'rubocop', '~> 0.47.1'
+  gem 'rubocop-rspec', '~> 1.10.0'
 end
 group :doc do
   gem 'puppet-strings', '~> 1.0.0'
@@ -35,4 +35,4 @@ end
 gem 'facter', *location_from_env('FACTER_GEM_VERSION')
 gem 'puppet', *location_from_env('PUPPET_GEM_VERSION')
 
-eval(File.read("#{__FILE__}.local"), binding) if File.exist? "#{__FILE__}.local" # rubocop:disable Lint/Eval
+eval(File.read("#{__FILE__}.local"), binding) if File.exist? "#{__FILE__}.local" # rubocop:disable Security/Eval
