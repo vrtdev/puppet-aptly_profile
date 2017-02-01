@@ -135,7 +135,7 @@ class aptly_profile(
     user    => $aptly_user,
     hour    => '22',
     minute  => '15',
-    command => $cleanup_cronjob,
+    command => "${cleanup_cronjob} | logger",
   }
 
   file { '/usr/bin/aptly-lock':
