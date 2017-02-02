@@ -100,7 +100,7 @@ class aptly_profile(
     mode   => '0755',
   }
 
-  concat::fragment { "cron_cleanup_repo_header":
+  concat::fragment { 'cron_cleanup_repo_header':
     target  => $cleanup_cronjob,
     order   => 0,
     content => '#!/bin/bash
@@ -149,7 +149,7 @@ class aptly_profile(
   }
 
   # Cronjob to cleanup repo
-  cron { "auto cleanup repos":
+  cron { 'auto cleanup repos':
     user    => $aptly_user,
     hour    => '22',
     minute  => '15',
