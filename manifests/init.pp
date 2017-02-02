@@ -18,6 +18,10 @@
 # @param repo_defaults      Hash with default properties to set on repos.
 # @param aptly_environment  An array with custom environment settings for the cron job.
 # @param publish_defaults   A hash with default properties to set on publishing points.
+# @param insert_hello_script  Override the location where to put the insert_hello script.
+# @param insert_hello Boolean indicating if you want te hello world package to be included
+#   in newly created repositories.
+# @params aptly_cache_dir   Directory where aptly can cache some data (the hello world package)
 #
 class aptly_profile(
   String $aptly_user = 'aptly',
@@ -34,6 +38,9 @@ class aptly_profile(
   Hash $repo_defaults = {},
   Hash $publish_defaults = {},
   Array[String] $aptly_environment = [],
+  Stdlib::Absolutepath $insert_hello_script = "${aptly_homedir}/insert_hello.sh",
+  Stdlib::ABsolutepath $aptly_cache_dir     = '/var/cache/aptly',
+  Boolean $insert_hello                     = true,
 ){
 
   # User, group and homedir
@@ -93,7 +100,7 @@ class aptly_profile(
     mode   => '0755',
   }
 
-  concat::fragment { "cron_cleanup_repo_header":
+  concat::fragment { 'cron_cleanup_repo_header':
     target  => $cleanup_cronjob,
     order   => 0,
     content => '#!/bin/bash
@@ -128,10 +135,21 @@ class aptly_profile(
     ::aptly::repo { $repo_name:
       * => $combined_repo_config,
     }
+    if $insert_hello {
+      exec {"aptly_profile::insert_hello: ${repo_name}":
+        command     => shell_join([
+          $insert_hello_script, '--repo', $repo_name,
+        ]),
+        user        => $aptly_user,
+        refreshonly => true,
+        subscribe   => Exec["aptly_repo_create-${repo_name}"],
+        require     => File[$insert_hello_script],
+      }
+    }
   }
 
   # Cronjob to cleanup repo
-  cron { "auto cleanup repos":
+  cron { 'auto cleanup repos':
     user    => $aptly_user,
     hour    => '22',
     minute  => '15',
@@ -261,6 +279,24 @@ class aptly_profile(
     group  => $aptly_group,
     mode   => '0755',
     source => 'puppet:///modules/aptly_profile/cleanup_repo.sh',
+  }
+
+  # aptly cache dir
+  file {$aptly_cache_dir:
+    ensure => 'directory',
+    owner  => $aptly_user,
+    group  => $aptly_group,
+    mode   => '0750',
+  }
+
+  # Insert hello package script
+  #############################
+  file {$insert_hello_script:
+    ensure => 'file',
+    owner  => $aptly_user,
+    group  => $aptly_group,
+    mode   => '0750',
+    source => 'puppet:///modules/aptly_profile/initialize_hello_repository.sh',
   }
 
   # Repo Singing Key management
