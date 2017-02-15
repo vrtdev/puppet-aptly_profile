@@ -218,6 +218,9 @@ class aptly_profile(
     ensure => 'absent',
   }
 
+  # cron with empty array keeps generating catalog changes
+  $real_aptly_env = ifelse(empty($aptly_environment), undef, $aptly_environment)
+
   cron { 'aptly-update':
     command     => "${aptly_homedir}/aptly-update.rb >/dev/null",
     user        => $aptly_user,
@@ -227,7 +230,7 @@ class aptly_profile(
     ],
     hour        => 3,
     minute      => 17,
-    environment => $aptly_environment,
+    environment => $real_aptly_env,
   }
 
   $publish.each |String $publish_name, Hash $config| {
