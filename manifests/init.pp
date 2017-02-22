@@ -21,7 +21,7 @@
 # @param insert_hello_script  Override the location where to put the insert_hello script.
 # @param insert_hello Boolean indicating if you want te hello world package to be included
 #   in newly created repositories.
-# @params aptly_cache_dir   Directory where aptly can cache some data (the hello world package)
+# @param aptly_cache_dir   Directory where aptly can cache some data (the hello world package)
 #
 class aptly_profile(
   String $aptly_user = 'aptly',
