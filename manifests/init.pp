@@ -211,7 +211,7 @@ class aptly_profile(
     owner  => $aptly_user,
     group  => $aptly_group,
     mode   => '0644',
-    source => 'puppet:///modules/aptly_profile/publish_d-header',
+    source => 'puppet:///modules/aptly_profile/conf_d-header',
   }
 
   file {"${aptly_homedir}/publish.yaml":
