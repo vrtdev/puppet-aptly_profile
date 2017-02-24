@@ -210,6 +210,43 @@ class Aptly
     snapshot
   end
 
+  def create_mirror(name, config)
+    if mirrors.include?(name)
+      @logger.info("Mirror #{name} already exists, skipping")
+      return
+    end
+
+    raise RunError.new([], 255, "Mirror #{name} has no location") unless config['location']
+    raise RunError.new([], 255, "Mirror #{name} has no release") unless config['release']
+
+    config = {
+      'with_sources'     => false,
+      'with_udebs'       => false,
+      'filter_with_deps' => false,
+      'architectures'    => [],
+      'environment'      => [],
+      'filter'           => ''
+
+    }.merge(config)
+    args = %w(mirror create)
+
+    unless config['architectures'].empty?
+      args << '-architectures=' + [config['architectures'].flatten].join(',')
+    end
+    args << '-with-sources=' + config['with_sources'].to_s
+    args << '-with-udebs=' + config['with_udebs'].to_s
+    args << '-filter="' + config['filter'] + '"' unless config['filter'].empty?
+
+    args << '-filter-with-deps' if config['filter_with_deps']
+
+    args << name
+    args << config['location']
+    args << config['release']
+    args << config['repos'].join(' ') unless config['repos'].empty?
+    @logger.info("Creating mirror #{name} => #{config['location']}")
+    run(@aptly_cmd, *args)
+  end
+
   def publish(path, components, architectures)
     # Publish-or-switch wrapper
     prefix, distribution = path.match(%r{(?:(.*)/)?([^/]+)}).captures
