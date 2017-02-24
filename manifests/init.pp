@@ -214,10 +214,6 @@ class aptly_profile(
     source => 'puppet:///modules/aptly_profile/conf_d-header',
   }
 
-  file {"${aptly_homedir}/publish.yaml":
-    ensure => 'absent',
-  }
-
   # cron with empty array keeps generating catalog changes
   $real_aptly_env = ifelse(empty($aptly_environment), undef, $aptly_environment)
 
