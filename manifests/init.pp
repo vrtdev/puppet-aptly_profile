@@ -230,16 +230,13 @@ class aptly_profile(
   }
 
   $publish.each |String $publish_name, Hash $config| {
-    # lint:ignore:variable_scope
-    ## see https://github.com/rodjek/puppet-lint/issues/464
-
     if has_key($config, 'instant_publish') {
       $instant_publish = $config['instant_publish']
-      # lint:endignore
     }
     else {
       $instant_publish = false
     }
+
     aptly_profile::publish {$publish_name:
       config          => $config,
       instant_publish => $instant_publish,
