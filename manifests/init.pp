@@ -89,9 +89,12 @@ class aptly_profile(
 
   $_mirror_defaults = merge({'environment' => $aptly_environment}, $mirror_defaults)
 
-
   # Pass through the aptly_environment to the execs used for mirroring
-  create_resources('::aptly::mirror', $mirrors, $_mirror_defaults)
+  $mirrors.each |$mirror_name, $mirror_config| {
+    ::aptly_profile::delayed_mirror {$mirror_name:
+      config => $mirror_config,
+    }
+  }
 
   $cleanup_cronjob = "${aptly_homedir}/cron_cleanup_repo.sh"
 
@@ -197,8 +200,9 @@ class aptly_profile(
   }
 
   $publish_d = "${aptly_homedir}/publish.d"
+  $mirror_d  = "${aptly_homedir}/mirror.d"
 
-  file {$publish_d:
+  file {[$publish_d, $mirror_d]:
     ensure => 'directory',
     owner  => $aptly_user,
     group  => $aptly_group,
@@ -206,16 +210,12 @@ class aptly_profile(
     purge  => true,
   }
 
-  file {"${publish_d}/00_CONTENTS_WARNING":
+  file {["${publish_d}/00_CONTENTS_WARNING", "${mirror_d}/00_CONTENTS_WARNING"]:
     ensure => 'file',
     owner  => $aptly_user,
     group  => $aptly_group,
     mode   => '0644',
-    source => 'puppet:///modules/aptly_profile/publish_d-header',
-  }
-
-  file {"${aptly_homedir}/publish.yaml":
-    ensure => 'absent',
+    source => 'puppet:///modules/aptly_profile/conf_d-header',
   }
 
   # cron with empty array keeps generating catalog changes
@@ -234,16 +234,13 @@ class aptly_profile(
   }
 
   $publish.each |String $publish_name, Hash $config| {
-    # lint:ignore:variable_scope
-    ## see https://github.com/rodjek/puppet-lint/issues/464
-
     if has_key($config, 'instant_publish') {
       $instant_publish = $config['instant_publish']
-      # lint:endignore
     }
     else {
       $instant_publish = false
     }
+
     aptly_profile::publish {$publish_name:
       config          => $config,
       instant_publish => $instant_publish,

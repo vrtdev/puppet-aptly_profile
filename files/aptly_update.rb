@@ -176,4 +176,8 @@ class AptlyUpdate
     @logger.info "Publishing point #{publishing_point}: publishing as '#{name}'"
     @aptly.publish(name, to_pub, architectures)
   end
+
+  def mirror(mirror, config)
+    @aptly.create_mirror(mirror, config)
+  end
 end

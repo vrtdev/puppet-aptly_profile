@@ -115,22 +115,76 @@ def publish_yaml_config(filename)
   end
 end
 
-begin
-  if ARGV.empty?
-    Dir.glob('publish.d/*.yaml').each do |f|
-      publish_yaml_config(f)
-    end
+def mirror_yaml_config(filename)
+  if File.exist?(filename)
+    @logger.info "Creating mirror for `#{filename}`"
+    mirror_name = File.basename(filename, '.yaml').gsub('__', '/')
+    config = YAML.load_file(filename) || {}
+    @aptly_update.mirror(mirror_name, config)
   else
-    ARGV.each do |req|
-      freq = req.gsub('/', '__')
-      publish_yaml_config("publish.d/#{freq}.yaml")
+    STDERR.puts "Could not find the requested file #{filename}."
+    exit 1
+  end
+end
+
+@mirror_errors = []
+Dir.glob('mirror.d/*.yaml').each do |f|
+  begin
+    mirror_yaml_config(f)
+  rescue Aptly::RunError => e
+    @mirror_errors << [f, e]
+  end
+end
+
+@publish_errors = []
+
+if ARGV.empty?
+  Dir.glob('publish.d/*.yaml').each do |f|
+    begin
+      publish_yaml_config(f)
+    rescue Aptly::RunError => e
+      @publish_errors << [f, e]
     end
   end
+else
+  ARGV.each do |req|
+    freq = req.gsub('/', '__')
+    begin
+      publish_yaml_config("publish.d/#{freq}.yaml")
+    rescue Aptly::RunError => e
+      @publish_errors << [freq, e]
+    end
+  end
+end
+
+begin
   @aptly.cleanup
 rescue Aptly::RunError => e
-  STDERR.puts 'Running command failed'
-  STDERR.puts '   ' + e.command.map { |_a| "'#{e}'" }.join(' ')
-  STDERR.puts 'Output:'
-  STDERR.puts e.output
-  STDERR.puts " Exit code: #{e.exitstatus}"
+  @publish_errors << ['cleanup', e]
 end
+
+unless @mirror_errors.empty?
+  @mirror_errors.each do |pair|
+    loc = pair.first
+    e = pair.last
+    STDERR.puts 'Running command failed for ' + loc
+    STDERR.puts '   ' + e.command.map { |_a| "'#{e}'" }.join(' ')
+    STDERR.puts 'Output:'
+    STDERR.puts e.output
+    STDERR.puts " Exit code: #{e.exitstatus}"
+  end
+end
+
+unless @publish_errors.empty?
+  @publish_errors.each do |pair|
+    loc = pair.first
+    e = pair.last
+    STDERR.puts 'Running command failed for ' + loc
+    STDERR.puts '   ' + e.command.map { |_a| "'#{e}'" }.join(' ')
+    STDERR.puts 'Output:'
+    STDERR.puts e.output
+    STDERR.puts " Exit code: #{e.exitstatus}"
+  end
+end
+
+exit 1 unless @publish_errors.empty? && @mirror_errors.empty?
