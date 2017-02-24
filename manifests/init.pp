@@ -197,8 +197,9 @@ class aptly_profile(
   }
 
   $publish_d = "${aptly_homedir}/publish.d"
+  $mirror_d  = "${aptly_homedir}/mirror.d"
 
-  file {$publish_d:
+  file {[$publish_d, $mirror_d]:
     ensure => 'directory',
     owner  => $aptly_user,
     group  => $aptly_group,
@@ -206,7 +207,7 @@ class aptly_profile(
     purge  => true,
   }
 
-  file {"${publish_d}/00_CONTENTS_WARNING":
+  file {["${publish_d}/00_CONTENTS_WARNING", "${mirror_d}/00_CONTENTS_WARNING"]:
     ensure => 'file',
     owner  => $aptly_user,
     group  => $aptly_group,
