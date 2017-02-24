@@ -89,9 +89,12 @@ class aptly_profile(
 
   $_mirror_defaults = merge({'environment' => $aptly_environment}, $mirror_defaults)
 
-
   # Pass through the aptly_environment to the execs used for mirroring
-  create_resources('::aptly::mirror', $mirrors, $_mirror_defaults)
+  $mirrors.each |$mirror_name, $mirror_config| {
+    ::aptly_profile::delayed_mirror {$mirror_name:
+      config => $mirror_config,
+    }
+  }
 
   $cleanup_cronjob = "${aptly_homedir}/cron_cleanup_repo.sh"
 
