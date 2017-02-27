@@ -1,6 +1,6 @@
 {
   "name": "dpcops-aptly_profile",
-  "version": "0.4.4",
+  "version": "1.0.0",
   "author": "VRT DPCOPS",
   "summary": "Wrapper arround the aptly module for easier management",
   "license": "MIT",
