@@ -24,31 +24,31 @@ class AptlyUpdate
     # rubocop:enable Metrics/LineLength
     if conf.key?('snapshot')
       @logger.info "'#{prefix}': explicitly set to '#{conf['snapshot']}'"
-      return conf['snapshot']
+      conf['snapshot']
 
     elsif conf.key?('script')
       @logger.info "'#{prefix}': running script"
       @aptly.update_mirror(conf['update']) if conf.key?('update')
-      return @aptly.script(conf['script'])
+      @aptly.script(conf['script'])
 
     elsif conf.key?('mirror')
       @logger.info "'#{prefix}': creating snapshot of mirror '#{conf['mirror']}'"
-      return @aptly.create_snapshot_mirror(conf['mirror'], prefix)
+      @aptly.create_snapshot_mirror(conf['mirror'], prefix)
 
     elsif conf.key?('merge')
       @logger.info "'#{prefix}': creating merge snapshot"
       sources = conf['merge'].map.with_index(0) do |s, i|
         resolve_snapshot("#{prefix}#{@separator}#{i}", s)
       end
-      return @aptly.merge(prefix, sources)
+      @aptly.merge(prefix, sources)
 
     elsif conf.key?('repo')
       @logger.info "'#{prefix}': creating snapshot of local repo '#{conf['repo']}'"
-      return @aptly.create_snapshot_repo(conf['repo'], prefix)
+      @aptly.create_snapshot_repo(conf['repo'], prefix)
 
     else
       STDERR.puts "#{prefix}: no recognized config, ignoring"
-      return nil
+      nil
     end
   end
 
@@ -143,9 +143,11 @@ class AptlyUpdate
 
     snapshot = resolve_snapshot_lag(prefix, existing_snapshots, lag)
 
-    prune_old_snapshots(prefix,
-                        filter_snapshots_old(existing_snapshots, snapshot),
-                        keep) if keep >= 0
+    if keep >= 0
+      prune_old_snapshots(prefix,
+                          filter_snapshots_old(existing_snapshots, snapshot),
+                          keep)
+    end
 
     @logger.info "'#{prefix}' resolved to '#{snapshot}'"
     snapshot
