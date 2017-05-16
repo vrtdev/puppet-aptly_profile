@@ -41,6 +41,12 @@ class aptly_profile(
   Stdlib::Absolutepath $insert_hello_script = "${aptly_homedir}/insert_hello.sh",
   Stdlib::ABsolutepath $aptly_cache_dir     = '/var/cache/aptly',
   Boolean $insert_hello                     = true,
+  Boolean $use_api                          = false,
+  String  $api_ensure                       = running,
+  String  $api_user                         = 'aptly',
+  String  $api_group                        = 'users',
+  String  $api_listen                       = ':8080',
+  Boolean $api_enable_cli_and_http          = true,
 ){
 
   # User, group and homedir
@@ -265,10 +271,24 @@ class aptly_profile(
   class { '::apache::mod::autoindex': }
 
   ::apache::vhost { 'aptly':
-    port           => 80,
-    docroot        => "${aptly_homedir}/public",
-    require        => File["${aptly_homedir}/public"],
-    manage_docroot => false,
+    port            => 80,
+    docroot         => "${aptly_homedir}/public",
+    require         => File["${aptly_homedir}/public"],
+    manage_docroot  => false,
+  }
+
+  # API
+  #####
+  if $use_api {
+    $redirect_source = ['/api']
+    $redirect_dest   = ['http://127.0.0.1:8080/']
+    ::apache::vhost { "aptly-api.${::facts[vrt_fqdn][env_suffix]}":
+      port            => 80,
+      manage_docroot  => false,
+      redirect_source => $redirect_source,
+      redirect_dest   => $redirect_dest,
+      require         => Apache::Vhost['aptly'],
+    }
   }
 
   # Cleanup script
