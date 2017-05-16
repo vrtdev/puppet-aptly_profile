@@ -22,6 +22,15 @@
 # @param insert_hello Boolean indicating if you want te hello world package to be included
 #   in newly created repositories.
 # @param aptly_cache_dir   Directory where aptly can cache some data (the hello world package)
+# @param enable_api            Wether to config & start the Aptly API service
+# @param proxy_api          Should the API service get proxied
+# @param proxy_api_htpasswd_users Hash of users: htpasswd for proxied API access
+# @param api_ensure         Service ensure param
+# @param api_user           User for Aptly API. Default 'aptly'
+# @param api_group          Group for Aptly API. Default 'users'
+# @param api_listen_ip      Ip to listen on. Default '127.0.0.1'
+# @param api_listen_port    Port to listen on. Default 8080
+# @param api_enable_cli_and_http  Allow combined use of Aptly API & CLI
 #
 class aptly_profile(
   String $aptly_user = 'aptly',
@@ -41,11 +50,14 @@ class aptly_profile(
   Stdlib::Absolutepath $insert_hello_script = "${aptly_homedir}/insert_hello.sh",
   Stdlib::ABsolutepath $aptly_cache_dir     = '/var/cache/aptly',
   Boolean $insert_hello                     = true,
-  Boolean $use_api                          = false,
+  Boolean $enable_api                       = false,
+  Boolean $proxy_api                        = true,
+  Hash    $proxy_api_htpasswd_users         = {},
   String  $api_ensure                       = running,
   String  $api_user                         = 'aptly',
   String  $api_group                        = 'users',
-  String  $api_listen                       = ':8080',
+  Optional[String] $api_listen_ip           = '127.0.0.1',
+  Integer  $api_listen_port                 = 8080,
   Boolean $api_enable_cli_and_http          = true,
 ){
 
@@ -271,23 +283,68 @@ class aptly_profile(
   class { '::apache::mod::autoindex': }
 
   ::apache::vhost { 'aptly':
-    port            => 80,
-    docroot         => "${aptly_homedir}/public",
-    require         => File["${aptly_homedir}/public"],
-    manage_docroot  => false,
+    port           => 80,
+    docroot        => "${aptly_homedir}/public",
+    require        => File["${aptly_homedir}/public"],
+    manage_docroot => false,
   }
 
   # API
   #####
-  if $use_api {
-    $redirect_source = ['/api']
-    $redirect_dest   = ['http://127.0.0.1:8080/']
-    ::apache::vhost { "aptly-api.${::facts[vrt_fqdn][env_suffix]}":
-      port            => 80,
-      manage_docroot  => false,
-      redirect_source => $redirect_source,
-      redirect_dest   => $redirect_dest,
-      require         => Apache::Vhost['aptly'],
+  if $enable_api {
+    if $proxy_api {
+      $api_listen = "${api_listen_ip}:${api_listen_port}"
+      $proxy_pass = [
+        {
+          'path' => '/',
+          'url' => "http://${api_listen}/"
+        },
+      ]
+
+      include ::apache::mod::auth_basic
+      include ::apache::mod::authn_core
+      include ::apache::mod::authn_file
+      include ::apache::mod::authz_default
+      include ::apache::mod::authz_user
+
+      $content = @(EOF)
+        <% $users.each |$usr, $pwd| { -%>
+        <%= $usr %>:<%= $pwd %>
+        <% } -%>
+        | EOF
+
+      file { '/var/www/.aptly-api-passwdfile':
+        ensure  => file,
+        content => inline_epp($content, {'users' => $proxy_api_htpasswd_users} ),        # content => 'aptly-api:$2y$05$KFplR8jth/yMovtuTheFZO6ywcFkqd1qBrgASiLK2/cNiWVYyzY5i',
+      }
+
+      ::apache::vhost { "aptly-api.${::facts[vrt_fqdn][env_suffix]}":
+        priority        => 50,
+        port            => 80,
+        manage_docroot  => false,
+        proxy_pass      => $proxy_pass,
+        docroot         => "/var/www/html",
+        directories => [
+          {
+            'provider'            => 'location',
+            'path'                => '/',
+            'auth_type'           => 'Basic',
+            'auth_name'           => 'api-access',
+            'auth_basic_provider' => 'file',
+            'auth_user_file'      => '/var/www/.aptly-api-passwdfile',
+            'auth_require'        => 'valid-user',
+          },
+        ],
+        require         => [File["${aptly_homedir}/public"],Apache::Vhost['aptly']],
+      }
+    }
+    class { '::aptly::api':
+      ensure              => $api_ensure,
+      user                => $api_user,
+      group               => $api_group,
+      listen              => $api_listen,
+      # log                 => 'none',
+      enable_cli_and_http => $api_enable_cli_and_http,
     }
   }
 
