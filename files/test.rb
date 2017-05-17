@@ -194,12 +194,12 @@ end
 
 class AptlyMock7 < Aptly
   def snapshots
-    %w(one two)
+    %w[one two]
   end
 
   def merge(prefix, sources)
     raise "Wrong prefix: #{prefix}" unless prefix == 'merge main'
-    raise "wrong sources: #{sources}" unless sources == %w(one two)
+    raise "wrong sources: #{sources}" unless sources == %w[one two]
     "#{prefix}#{@separator}now"
   end
 
@@ -265,8 +265,7 @@ class AptlyMock9 < Aptly
   end
   attr_reader :snapshots
 
-  def update_mirror(_m)
-  end
+  def update_mirror(_m); end
 
   def snapshot_diff(_a, _b)
     true
@@ -312,8 +311,7 @@ class AptlyMock10 < Aptly
   end
   attr_reader :snapshots
 
-  def update_mirror(_m)
-  end
+  def update_mirror(_m); end
 
   def snapshot_diff(_a, _b)
     true

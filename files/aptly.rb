@@ -66,6 +66,7 @@ class Aptly
   # the string "##APTLY##" (without quotes) will be replaced with the aptly
   # command that is configured for the Aptly-object
   #
+  # rubocop:disable Metrics/BlockLength
   def script(cmd)
     cmd.gsub!(%r{##APTLY##}, @aptly_cmd)
     @logger.debug "Running command `#{cmd}`"
@@ -228,7 +229,7 @@ class Aptly
       'filter'           => ''
 
     }.merge(config)
-    args = %w(mirror create)
+    args = %w[mirror create]
 
     unless config['architectures'].empty?
       args << '-architectures=' + [config['architectures'].flatten].join(',')
