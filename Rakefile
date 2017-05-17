@@ -31,6 +31,6 @@ desc 'Run all jenkins tasks'
 task jenkins: ['jenkins:all']
 
 Rake::Task['default'].clear
-task default: [:syntax, :lint, :rubocop, :validate]
+task default: %i[syntax lint rubocop validate]
 
 PuppetLint.configuration.ignore_paths = ['spec/**/*.pp', 'pkg/**/*.pp', 'vendor/**/*.pp']
