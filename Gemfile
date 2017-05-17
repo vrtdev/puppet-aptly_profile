@@ -23,8 +23,8 @@ group :development, :test do
   gem 'puppet-lint', '~> 2'
   gem 'puppet-syntax'
   gem 'puppetlabs_spec_helper', '>= 1.2.1'
-  gem 'rubocop', '~> 0.47.1'
-  gem 'rubocop-rspec', '~> 1.10.0'
+  gem 'rubocop', '~> 0.48.1'
+  gem 'rubocop-rspec', '~> 1.15'
 end
 group :doc do
   gem 'puppet-strings', '~> 1.0.0'
