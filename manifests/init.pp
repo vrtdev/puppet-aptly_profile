@@ -53,7 +53,7 @@ class aptly_profile(
   Boolean $enable_api                       = false,
   Boolean $proxy_api                        = true,
   Hash    $proxy_api_htpasswd_users         = {},
-  String  $api_ensure                       = running,
+  String  $api_ensure                       = 'running',
   String  $api_user                         = 'aptly',
   String  $api_group                        = 'users',
   Optional[String] $api_listen_ip           = '127.0.0.1',
@@ -343,7 +343,6 @@ class aptly_profile(
       user                => $api_user,
       group               => $api_group,
       listen              => $api_listen,
-      # log                 => 'none',
       enable_cli_and_http => $api_enable_cli_and_http,
     }
   }
