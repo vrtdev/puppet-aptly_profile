@@ -304,7 +304,6 @@ class aptly_profile(
       include ::apache::mod::auth_basic
       include ::apache::mod::authn_core
       include ::apache::mod::authn_file
-      include ::apache::mod::authz_default
       include ::apache::mod::authz_user
 
       $content = @(EOF)
@@ -315,7 +314,8 @@ class aptly_profile(
 
       file { '/var/www/.aptly-api-passwdfile':
         ensure  => file,
-        content => inline_epp($content, {'users' => $proxy_api_htpasswd_users} ),        # content => 'aptly-api:$2y$05$KFplR8jth/yMovtuTheFZO6ywcFkqd1qBrgASiLK2/cNiWVYyzY5i',
+        content => inline_epp($content, {'users' => $proxy_api_htpasswd_users} ),
+        require => Class['Apache'],
       }
 
       ::apache::vhost { "aptly-api.${::facts[vrt_fqdn][env_suffix]}":
