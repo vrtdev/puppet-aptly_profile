@@ -1,6 +1,6 @@
 {
   "name": "dpcops-aptly_profile",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "author": "VRT DPCOPS",
   "summary": "Wrapper arround the aptly module for easier management",
   "license": "MIT",
@@ -8,6 +8,10 @@
   "project_page": "https://github.com/vrtdev/puppet-aptly_profile",
   "issues_url": "https://github.com/vrtdev/puppet-aptly_profile/issues",
   "dependencies": [
+    {
+      "name": "puppetlabs-apache",
+      "version_requirement": ">= 1.10.0 < 2.0.0"
+    },
     {
       "name": "puppetlabs-stdlib",
       "version_requirement": ">= 4.13.1 < 5.0.0"
