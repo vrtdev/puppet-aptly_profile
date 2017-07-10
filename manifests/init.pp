@@ -31,6 +31,7 @@
 # @param api_listen_ip      Ip to listen on. Default '127.0.0.1'
 # @param api_listen_port    Port to listen on. Default 8080
 # @param api_enable_cli_and_http  Allow combined use of Aptly API & CLI
+# @param force_https_reverse_proxy Force rewrites to https if we are behind a reverse proxy (looking at x-forwareded-proto)
 #
 class aptly_profile(
   String               $aptly_user                = 'aptly',
@@ -59,6 +60,7 @@ class aptly_profile(
   Optional[String]     $api_listen_ip             = '127.0.0.1',
   Integer              $api_listen_port           = 8080,
   Boolean              $api_enable_cli_and_http   = true,
+  Boolean              $force_https_reverse_proxy = true,
 ){
 
   # User, group and homedir
@@ -281,12 +283,26 @@ class aptly_profile(
 
   class { '::apache::mod::dir': }
   class { '::apache::mod::autoindex': }
+  if $force_https_reverse_proxy {
+    class { '::apache::mod::rewrite': }
+    $https_rewrite_rules = [
+      {
+        'comment'      => 'Force https redirect for proxied requests (loadbalancer)',
+        'rewrite_cond' => ['%{HTTP:X-Forwarded-Proto} =http'],
+        'rewrite_rule' => ['. https://%{HTTP:Host}%{REQUEST_URI} [L,R=permanent]'],
+      },
+    ]
+  }
+  else {
+    $https_rewrite_rules = []
+  }
 
   ::apache::vhost { 'aptly':
     port           => 80,
     docroot        => "${aptly_homedir}/public",
     require        => File["${aptly_homedir}/public"],
     manage_docroot => false,
+    rewrites       => $https_rewrite_rules,
   }
 
   # API
@@ -300,7 +316,6 @@ class aptly_profile(
           'url' => "http://${api_listen}/"
         },
       ]
-
       include ::apache::mod::auth_basic
       include ::apache::mod::authn_core
       include ::apache::mod::authn_file
@@ -324,6 +339,7 @@ class aptly_profile(
         manage_docroot => false,
         proxy_pass     => $proxy_pass,
         docroot        => '/var/www/html',
+        rewrites       => $https_rewrite_rules,
         directories    => [
           {
             'provider'            => 'location',
