@@ -105,10 +105,13 @@ class aptly_profile(
   # You will still need to manually update them (or wait for the cron below to
   # run
 
-  create_resources('::aptly_profile::trusted_key', $trusted_keys)
+  $trusted_keys.each |$keyname, $keyconfig| {
+    ::aplty_profile::trusted_key {$keyname:
+      * => $keyconfig
+    }
+  }
 
   $_mirror_defaults = merge({'environment' => $aptly_environment}, $mirror_defaults)
-
   # Pass through the aptly_environment to the execs used for mirroring
   $mirrors.each |$mirror_name, $mirror_config| {
     ::aptly_profile::delayed_mirror {$mirror_name:
