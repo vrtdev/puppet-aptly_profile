@@ -167,8 +167,8 @@ unless @mirror_errors.empty?
   @mirror_errors.each do |pair|
     loc = pair.first
     e = pair.last
-    STDERR.puts 'Running command failed for ' + loc
-    STDERR.puts '   ' + e.command.map { |_a| "'#{e}'" }.join(' ')
+    STDERR.puts 'Mirror - Running command failed for : ' + loc
+    STDERR.puts '   ' + e.command.map { |_a| "#{e.class} : #{e.message}" }.join("\n   ")
     STDERR.puts 'Output:'
     STDERR.puts e.output
     STDERR.puts " Exit code: #{e.exitstatus}"
@@ -179,8 +179,8 @@ unless @publish_errors.empty?
   @publish_errors.each do |pair|
     loc = pair.first
     e = pair.last
-    STDERR.puts 'Running command failed for ' + loc
-    STDERR.puts '   ' + e.command.map { |_a| "'#{e}'" }.join(' ')
+    STDERR.puts 'Publish - Running command failed for : ' + loc
+    STDERR.puts '   ' + e.command.map { |_a| "#{e.class} : #{e.message}" }.join("\n   ")
     STDERR.puts 'Output:'
     STDERR.puts e.output
     STDERR.puts " Exit code: #{e.exitstatus}"
