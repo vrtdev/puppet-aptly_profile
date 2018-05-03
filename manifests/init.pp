@@ -106,7 +106,7 @@ class aptly_profile(
   # run
 
   $trusted_keys.each |$keyname, $keyconfig| {
-    ::aplty_profile::trusted_key {$keyname:
+    ::aptly_profile::trusted_key {$keyname:
       * => $keyconfig
     }
   }
