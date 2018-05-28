@@ -449,7 +449,7 @@ class aptly_profile(
   # Aptly expects the signing key to be in its GnuPG keyring
   # Import/replace it
   exec { 'aptly_profile::init import aptly GPG key in to keyring':
-    creates     => "${aptly_homedir}/.gnupg/secring.gpg",
+    creates     => "${aptly_homedir}/.gnupg/private-keys-v1.d",
     user        => $aptly_user,
     environment => ["HOME=${aptly_homedir}"],
     cwd         => $aptly_homedir,
@@ -461,7 +461,7 @@ class aptly_profile(
     user        => $aptly_user,
     environment => ["HOME=${aptly_homedir}"],
     cwd         => $aptly_homedir,
-    command     => "/bin/rm -f .gnupg/secring.gpg; /usr/bin/gpg --import '${basename}.sec'",
+    command     => "/bin/rm -rf .gnupg/private-keys-v1.d; /usr/bin/gpg --import '${basename}.sec'",
   }
 
 }
