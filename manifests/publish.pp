@@ -37,7 +37,7 @@ define aptly_profile::publish(
         "${::aptly_profile::aptly_homedir}/aptly-update.rb",
         "${::aptly_profile::publish_d}/${yaml_name}.yaml",
       ],
-      subscribe   => File["${::aptly_profile::publish_d}/${name}.yaml"],
+      subscribe   => File["${::aptly_profile::publish_d}/${yaml_name}.yaml"],
     }
   }
 
