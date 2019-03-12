@@ -226,8 +226,8 @@ class Aptly
       'filter_with_deps' => false,
       'architectures'    => [],
       'environment'      => [],
-      'filter'           => ''
-      'force_components' => false,
+      'filter'           => '',
+      'force_components' => false
 
     }.merge(config)
     args = %w[mirror create]
