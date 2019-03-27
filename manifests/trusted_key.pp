@@ -11,8 +11,8 @@ define aptly_profile::trusted_key(
     user        => $::aptly_profile::aptly_user,
     environment => ["HOME=${::aptly_profile::aptly_homedir}"],
     cwd         => $::aptly_profile::aptly_homedir,
-    command     => "/bin/echo '${key}' | /usr/bin/gpg --no-default-keyring --keyring trustedkeys.gpg --import",
-    unless      => "/usr/bin/gpg --no-default-keyring --keyring trustedkeys.gpg --list-keys '${title}'",
+    command     => "/bin/echo '${key}' | /usr/bin/gpg1 --no-default-keyring --keyring trustedkeys.gpg --import",
+    unless      => "/usr/bin/gpg1 --no-default-keyring --keyring trustedkeys.gpg --list-keys '${title}'",
     require     => File[$::aptly_profile::aptly_homedir],
     before      => Class['::aptly'], # or he will try to download the keys, and fail
   }

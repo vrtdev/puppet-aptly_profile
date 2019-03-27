@@ -453,7 +453,7 @@ class aptly_profile(
     user        => $aptly_user,
     environment => ["HOME=${aptly_homedir}"],
     cwd         => $aptly_homedir,
-    command     => "/usr/bin/gpg --import '${basename}.sec'",
+    command     => "/usr/bin/gpg1 --import '${basename}.sec'",
   }
   exec { 'aptly_profile::init update aptly GPG key in keyring':
     refreshonly => true,
@@ -461,7 +461,7 @@ class aptly_profile(
     user        => $aptly_user,
     environment => ["HOME=${aptly_homedir}"],
     cwd         => $aptly_homedir,
-    command     => "/bin/rm -rf .gnupg/private-keys-v1.d; /usr/bin/gpg --import '${basename}.sec'",
+    command     => "/bin/rm -rf .gnupg/private-keys-v1.d; /usr/bin/gpg1 --import '${basename}.sec'",
   }
 
 }
