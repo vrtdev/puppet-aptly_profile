@@ -461,7 +461,7 @@ class aptly_profile(
     user        => $aptly_user,
     environment => ["HOME=${aptly_homedir}"],
     cwd         => $aptly_homedir,
-    command     => "/bin/rm -rf .gnupg/secring.gpg /usr/bin/gpg1 --import '${basename}.sec'",
+    command     => "/bin/rm -rf .gnupg/secring.gpg; /usr/bin/gpg1 --import '${basename}.sec'",
   }
 
 }
