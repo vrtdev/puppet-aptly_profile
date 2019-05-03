@@ -408,6 +408,11 @@ class aptly_profile(
     group  => 'root',
   }
 
+  file { '/etc/gpg_keys':
+    ensure => link,
+    target =>  "${aptly_homedir}/gpg_keys",
+  }
+
   $basename = "${aptly_homedir}/gpg_keys/aptly"
 
   $existing_key = get_first_matching_value($::gpg_keys, {
