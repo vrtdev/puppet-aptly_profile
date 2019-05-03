@@ -402,7 +402,7 @@ class aptly_profile(
   # to the $key variable to create our `apt::key` resource
 
   include ::keypair::gpg # To make the parent directory
-  $basename = '/etc/gpg_keys/aptly'
+  $basename = '/data/aptly/gpg_keys/aptly'
 
   $existing_key = get_first_matching_value($::gpg_keys, {
       'secret_present' => true,
