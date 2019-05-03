@@ -401,8 +401,14 @@ class aptly_profile(
   # We can't use the `keypair::gpg_keypair` defined type, because we need access
   # to the $key variable to create our `apt::key` resource
 
-  include ::keypair::gpg # To make the parent directory
-  $basename = '/data/aptly/gpg_keys/aptly'
+  file { "${aptly_homedir}/gpg_keys":
+    ensure => directory,
+    mode   => '0755',
+    owner  => 'root',
+    group  => 'root',
+  }
+
+  $basename = "${aptly_homedir}/gpg_keys/aptly"
 
   $existing_key = get_first_matching_value($::gpg_keys, {
       'secret_present' => true,
