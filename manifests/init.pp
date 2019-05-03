@@ -401,8 +401,14 @@ class aptly_profile(
   # We can't use the `keypair::gpg_keypair` defined type, because we need access
   # to the $key variable to create our `apt::key` resource
 
-  include ::keypair::gpg # To make the parent directory
-  $basename = '/etc/gpg_keys/aptly'
+  file { "${aptly_homedir}/gpg_keys":
+    ensure => directory,
+    mode   => '0755',
+    owner  => 'root',
+    group  => 'root',
+  }
+
+  $basename = "${aptly_homedir}/gpg_keys/aptly"
 
   $existing_key = get_first_matching_value($::gpg_keys, {
       'secret_present' => true,
@@ -449,11 +455,11 @@ class aptly_profile(
   # Aptly expects the signing key to be in its GnuPG keyring
   # Import/replace it
   exec { 'aptly_profile::init import aptly GPG key in to keyring':
-    creates     => "${aptly_homedir}/.gnupg/private-keys-v1.d",
+    creates     => "${aptly_homedir}/.gnupg/secring.gpg",
     user        => $aptly_user,
     environment => ["HOME=${aptly_homedir}"],
     cwd         => $aptly_homedir,
-    command     => "/usr/bin/gpg --import '${basename}.sec'",
+    command     => "/usr/bin/gpg1 --import '${basename}.sec'",
   }
   exec { 'aptly_profile::init update aptly GPG key in keyring':
     refreshonly => true,
@@ -461,7 +467,7 @@ class aptly_profile(
     user        => $aptly_user,
     environment => ["HOME=${aptly_homedir}"],
     cwd         => $aptly_homedir,
-    command     => "/bin/rm -rf .gnupg/private-keys-v1.d; /usr/bin/gpg --import '${basename}.sec'",
+    command     => "/bin/rm -rf .gnupg/secring.gpg; /usr/bin/gpg1 --import '${basename}.sec'",
   }
 
 }
