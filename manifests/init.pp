@@ -3,6 +3,7 @@
 # serves the (manually) published repos via apache
 #
 # @param aptly_user         User aptly is running as.
+# @param aptly_uid          Uid for the aptly user, needs to be fixed for backup/restore to work properly
 # @param aptly_group        Group aptly is running as.
 # @param aptly_homedir      Homedir for aptly.
 # @param aptly_shell        Shell for user aptly.
@@ -35,6 +36,7 @@
 #
 class aptly_profile(
   String               $aptly_user                = 'aptly',
+  String               $aptly_uid                 = '401',
   String               $aptly_group               = 'users',
   String               $aptly_homedir             = '/data/aptly',
   String               $aptly_shell               = '/bin/bash',
@@ -70,6 +72,7 @@ class aptly_profile(
     gid    => $aptly_group,
     home   => $aptly_homedir,
     shell  => $aptly_shell,
+    uid    => $aptly_uid,
   }
 
   group {$aptly_group:
