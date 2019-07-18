@@ -26,6 +26,7 @@
 # @param enable_api            Wether to config & start the Aptly API service
 # @param proxy_api          Should the API service get proxied
 # @param proxy_api_htpasswd_users Hash of users: htpasswd for proxied API access
+# @param api_vhost          When the api service is proxied, this will be the vhost name that is used.
 # @param api_ensure         Service ensure param
 # @param api_user           User for Aptly API. Default 'aptly'
 # @param api_group          Group for Aptly API. Default 'users'
@@ -56,6 +57,7 @@ class aptly_profile(
   Boolean              $enable_api                = false,
   Boolean              $proxy_api                 = true,
   Hash                 $proxy_api_htpasswd_users  = {},
+  String               $api_vhost                 = "api.${facts['fqdn']}",
   String               $api_ensure                = 'running',
   String               $api_user                  = 'aptly',
   String               $api_group                 = 'users',
@@ -339,7 +341,7 @@ class aptly_profile(
         require => Class['Apache'],
       }
 
-      ::apache::vhost { "aptly-api.${::facts[vrt_fqdn][env_suffix]}":
+      ::apache::vhost { $api_vhost:
         priority       => 50,
         port           => 80,
         manage_docroot => false,
