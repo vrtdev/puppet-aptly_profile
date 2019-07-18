@@ -259,7 +259,10 @@ class aptly_profile(
   }
 
   # cron with empty array keeps generating catalog changes
-  $real_aptly_env = ifelse(empty($aptly_environment), undef, $aptly_environment)
+  $real_aptly_env =  empty($aptly_environment) ? {
+    true    => undef,
+    default => $aptly_environment,
+  }
 
   cron { 'aptly-update':
     command     => "${aptly_homedir}/aptly-update.rb >/dev/null",
