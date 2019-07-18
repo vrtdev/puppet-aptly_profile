@@ -7,6 +7,9 @@
 # @param aptly_group        Group aptly is running as.
 # @param aptly_homedir      Homedir for aptly.
 # @param aptly_shell        Shell for user aptly.
+# @param manage_user        Manage the aptly user.
+# @param manage_group       Manage the aptly group.
+# @param manage_homedir     Manage the homedir.
 # @param cleanup_script     String with path to cleanup script
 # @param cleanup_defaults   String with default options to pass on to a cleanup for a repo
 # @param trusted_keys       Hash with trusted keys.
@@ -22,9 +25,9 @@
 # @param insert_hello_script  Override the location where to put the insert_hello script.
 # @param insert_hello Boolean indicating if you want te hello world package to be included
 #   in newly created repositories.
-# @param aptly_cache_dir   Directory where aptly can cache some data (the hello world package)
-# @param enable_api            Wether to config & start the Aptly API service
-# @param proxy_api          Should the API service get proxied
+# @param aptly_cache_dir    Directory where aptly can cache some data (the hello world package)
+# @param enable_api         Wether to config & start the Aptly API service
+# @param proxy_api          Should the API service get proxied (this makes it accessible on https).
 # @param proxy_api_htpasswd_users Hash of users: htpasswd for proxied API access
 # @param api_vhost          When the api service is proxied, this will be the vhost name that is used.
 # @param api_ensure         Service ensure param
@@ -41,6 +44,9 @@ class aptly_profile(
   String               $aptly_group               = 'users',
   String               $aptly_homedir             = '/data/aptly',
   String               $aptly_shell               = '/bin/bash',
+  Boolean              $manage_user               = true,
+  Boolean              $manage_group              = true,
+  Boolean              $manage_homedir            = true,
   String               $cleanup_script            = "${aptly_homedir}/cleanup_repo.sh",
   String               $cleanup_defaults          = '--keep 5 --days 3650 --package all --noop',
   Hash                 $trusted_keys              = {},
@@ -69,23 +75,29 @@ class aptly_profile(
 
   # User, group and homedir
   #########################
-  user {$aptly_user:
-    ensure => present,
-    gid    => $aptly_group,
-    home   => $aptly_homedir,
-    shell  => $aptly_shell,
-    uid    => $aptly_uid,
+  if $manage_user {
+    user {$aptly_user:
+      ensure => present,
+      gid    => $aptly_group,
+      home   => $aptly_homedir,
+      shell  => $aptly_shell,
+      uid    => $aptly_uid,
+    }
   }
 
-  group {$aptly_group:
-    ensure => present,
+  if $manage_group {
+    group {$aptly_group:
+      ensure => present,
+    }
   }
 
-  file { $aptly_homedir:
-    ensure  => 'directory',
-    owner   => $aptly_user,
-    group   => $aptly_group,
-    require => User[$aptly_user],
+  if $manage_homedir {
+    file { $aptly_homedir:
+      ensure  => 'directory',
+      owner   => $aptly_user,
+      group   => $aptly_group,
+      require => User[$aptly_user],
+    }
   }
 
   file { "${aptly_homedir}/public":
