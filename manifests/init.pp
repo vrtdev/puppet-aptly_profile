@@ -12,6 +12,7 @@
 # @param manage_homedir     Manage the homedir.
 # @param cleanup_script     String with path to cleanup script
 # @param cleanup_defaults   String with default options to pass on to a cleanup for a repo
+# @param gpg_uid            Configure the UID for a newly generated gpg key.
 # @param trusted_keys       Hash with trusted keys.
 # @param publish            Hash with the publish configuration.
 # @param mirrors            Hash with the mirrors to configure.
@@ -49,6 +50,7 @@ class aptly_profile(
   Boolean              $manage_homedir            = true,
   String               $cleanup_script            = "${aptly_homedir}/cleanup_repo.sh",
   String               $cleanup_defaults          = '--keep 5 --days 3650 --package all --noop',
+  String               $gpg_uid                   = 'Aptly repo server signing key',
   Hash                 $trusted_keys              = {},
   Hash                 $publish                   = {},
   Hash                 $mirrors                   = {},
@@ -451,7 +453,7 @@ class aptly_profile(
     }
   } else { # no existing key
     $generated_key = gpg_generate_key({
-        'uid' => 'VRT DPC repo singing key',
+        'uid' => $gpg_uid,
     })
     $key = $generated_key
 
