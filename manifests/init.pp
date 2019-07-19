@@ -435,7 +435,7 @@ class aptly_profile(
 
   $basename = "${aptly_homedir}/gpg_keys/aptly"
 
-  $existing_key = aptly_profile::get_first_matching_value($::gpg_keys, {
+  $existing_key = keypair::get_first_matching_value($::gpg_keys, {
       'secret_present' => true,
       'basename'       => 'aptly',
   })
