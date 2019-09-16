@@ -333,8 +333,8 @@ class aptly_profile(
   # API
   #####
   if $enable_api {
+    $api_listen = "${api_listen_ip}:${api_listen_port}"
     if $proxy_api {
-      $api_listen = "${api_listen_ip}:${api_listen_port}"
       $proxy_pass = [
         {
           'path' => '/',
