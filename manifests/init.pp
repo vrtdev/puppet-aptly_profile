@@ -50,6 +50,7 @@ class aptly_profile(
   Boolean              $manage_user               = true,
   Boolean              $manage_group              = true,
   Boolean              $manage_homedir            = true,
+  Boolean              $manage_apache             = true,
   String               $cleanup_script            = "${aptly_homedir}/cleanup_repo.sh",
   String               $cleanup_defaults          = '--keep 5 --days 3650 --package all --noop',
   String               $gpg_uid                   = 'Aptly repo server signing key',
@@ -302,40 +303,43 @@ class aptly_profile(
 
   # Publishing
   ############
-  class { '::apache':
-    default_vhost => false,
-    default_mods  => false,
-  }
+  if $manage_apache {
+    class { '::apache':
+      default_vhost => false,
+      default_mods  => false,
+    }
 
-  class { '::apache::mod::dir': }
-  class { '::apache::mod::autoindex': }
-  if $force_https_reverse_proxy {
-    class { '::apache::mod::rewrite': }
-    $https_rewrite_rules = [
-      {
-        'comment'      => 'Force https redirect for proxied requests (loadbalancer)',
-        'rewrite_cond' => ['%{HTTP:X-Forwarded-Proto} =http'],
-        'rewrite_rule' => ['. https://%{HTTP:Host}%{REQUEST_URI} [L,R=permanent]'],
-      },
-    ]
-  }
-  else {
-    $https_rewrite_rules = []
-  }
+    class { '::apache::mod::dir': }
+    class { '::apache::mod::autoindex': }
+    if $force_https_reverse_proxy {
+      class { '::apache::mod::rewrite': }
+      $https_rewrite_rules = [
+        {
+          'comment'      => 'Force https redirect for proxied requests (loadbalancer)',
+          'rewrite_cond' => ['%{HTTP:X-Forwarded-Proto} =http'],
+          'rewrite_rule' => ['. https://%{HTTP:Host}%{REQUEST_URI} [L,R=permanent]'],
+        },
+      ]
+    }
+    else {
+      $https_rewrite_rules = []
+    }
 
-  ::apache::vhost { 'aptly':
-    port           => 80,
-    docroot        => "${aptly_homedir}/public",
-    require        => File["${aptly_homedir}/public"],
-    manage_docroot => false,
-    rewrites       => $https_rewrite_rules,
+    ::apache::vhost { 'aptly':
+      port           => 80,
+      docroot        => "${aptly_homedir}/public",
+      require        => File["${aptly_homedir}/public"],
+      manage_docroot => false,
+      rewrites       => $https_rewrite_rules,
+    }
   }
 
   # API
   #####
   if $enable_api {
     $api_listen = "${api_listen_ip}:${api_listen_port}"
-    if $proxy_api {
+
+    if ($manage_apache and $proxy_api) {
       $proxy_pass = [
         {
           'path' => '/',
@@ -379,7 +383,7 @@ class aptly_profile(
         ],
         require        => [File["${aptly_homedir}/public"],Apache::Vhost['aptly']],
       }
-    }
+    } # end manage_apache and proxy_api
     class { '::aptly::api':
       ensure              => $api_ensure,
       user                => $api_user,
