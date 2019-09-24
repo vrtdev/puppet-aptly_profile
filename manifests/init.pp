@@ -7,6 +7,7 @@
 # @param aptly_group        Group aptly is running as.
 # @param aptly_homedir      Homedir for aptly.
 # @param aptly_shell        Shell for user aptly.
+# @param aptly_config       Additional config to pass through to aptly. Note: datadir is enforced.
 # @param manage_user        Manage the aptly user.
 # @param manage_group       Manage the aptly group.
 # @param manage_homedir     Manage the homedir.
@@ -45,6 +46,7 @@ class aptly_profile(
   String               $aptly_group               = 'users',
   String               $aptly_homedir             = '/data/aptly',
   String               $aptly_shell               = '/bin/bash',
+  Hash                 $aptly_config              = {},
   Boolean              $manage_user               = true,
   Boolean              $manage_group              = true,
   Boolean              $manage_homedir            = true,
@@ -111,12 +113,11 @@ class aptly_profile(
 
   # Aptly itself
   ##############
+  $_config = $aptly_config + { 'rootDir' => $aptly_homedir, }
   class { '::aptly':
     user          => $aptly_user,
     repo          => false, # don't include aptly.info repo
-    config        => {
-      rootDir => $aptly_homedir,
-    },
+    config        => $_config,
     aptly_mirrors => {},
     require       => File[$aptly_homedir],
   }
