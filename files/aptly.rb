@@ -3,6 +3,9 @@ require 'logger'
 
 # Wrapper class around aptly binary
 class Aptly
+
+  APTLY_VERSION_INTRODUCE_FORCE_COMPONENTS = Gem::Version.new('0.9')
+
   attr_reader :separator, :timefmt
   attr_accessor :logger
 
@@ -115,6 +118,10 @@ class Aptly
 
   def publish_points
     run(@aptly_cmd, 'publish', 'list', '-raw').lines.map(&:chomp)
+  end
+
+  def aptly_version
+    run(@aptly_cmd, 'version').split.last.scan(/\d+/).join('.')
   end
 
   # Update the specified mirror(s)
@@ -238,7 +245,10 @@ class Aptly
     args << '-with-sources=' + config['with_sources'].to_s
     args << '-with-udebs=' + config['with_udebs'].to_s
     args << '-filter="' + config['filter'] + '"' unless config['filter'].empty?
-    args << '-force-components=' + config['force_components'].to_s
+
+    if Gem::Version.new(aptly_version) >= APTLY_VERSION_INTRODUCE_FORCE_COMPONENTS
+      args << '-force-components=' + config['force_components'].to_s
+    end
 
     args << '-filter-with-deps' if config['filter_with_deps']
 
