@@ -431,10 +431,7 @@ class aptly_profile(
     group  => 'root',
   }
 
-  file { '/etc/gpg_keys':
-    ensure => link,
-    target =>  "${aptly_homedir}/gpg_keys",
-  }
+  ensure_resource('file', '/etc/gpg_keys', { 'ensure' => 'directory' })
 
   $basename = "${aptly_homedir}/gpg_keys/aptly"
 
@@ -473,6 +470,16 @@ class aptly_profile(
     group   => 'root',
     mode    => '0444',
     content => $key['public_key'],
+  }
+
+  file { "/etc/gpg_keys/aptly.pub":
+    ensure => link,
+    target =>  "${basename}.pub",
+  }
+
+  file { "/etc/gpg_keys/aptly.sec":
+    ensure => link,
+    target =>  "${basename}.sec",
   }
 
   @@::apt::key { "aptly key ${::hostname}":
