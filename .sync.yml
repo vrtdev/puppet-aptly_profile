@@ -1,0 +1,43 @@
+---
+Gemfile:
+  optional:
+    ':development':
+      - gem: awesome_print
+      - gem: puppet-lint-leading_zero-check
+      - gem: puppet-lint-trailing_comma-check
+      - gem: puppet-lint-version_comparison-check
+      - gem: puppet-lint-unquoted_string-check
+      - gem: puppet-lint-param-docs
+
+Rakefile:
+  extras: |
+    # Since puppet 4, absolute class names (with leading ::) are frowned upon.
+    PuppetLint.configuration.absolute_classname_reverse = true
+
+spec/spec_helper.rb:
+  mock_with: ':rspec'
+  hiera_config: 'spec/fixtures/hiera/hiera.yaml'
+  spec_overrides: |
+    RSpec.configuration.trusted_server_facts = true
+
+    # make sure on_supported_os uses the default facts too.
+    default_facts.each do |fact, value|
+      add_custom_fact(fact, value)
+    end
+    # rubocop:disable Layout/TrailingBlankLines
+
+    if ENV['PUPPET_DEBUG']
+      RSpec.configure do |conf|
+        conf.before(:each) do
+          Puppet::Util::Log.level = :debug
+          Puppet::Util::Log.newdestination(:console)
+        end
+      end
+    end
+#end spec_overrides
+
+# Unused files.
+appveyor.yml:
+  delete: true
+.gitlab-ci.yml:
+  delete: true
