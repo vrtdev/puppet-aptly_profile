@@ -14,6 +14,7 @@
 # @param cleanup_script     String with path to cleanup script
 # @param cleanup_defaults   String with default options to pass on to a cleanup for a repo
 # @param gpg_uid            Configure the UID for a newly generated gpg key.
+# @param gpg_import_apt     Import the generated key in apt immediately.
 # @param trusted_keys       Hash with trusted keys.
 # @param publish            Hash with the publish configuration.
 # @param mirrors            Hash with the mirrors to configure.
@@ -54,6 +55,7 @@ class aptly_profile(
   String               $cleanup_script            = "${aptly_homedir}/cleanup_repo.sh",
   String               $cleanup_defaults          = '--keep 5 --days 3650 --package all --noop',
   String               $gpg_uid                   = 'Aptly repo server signing key',
+  Boolean              $gpg_import_apt            = false,
   Hash                 $trusted_keys              = {},
   Hash                 $publish                   = {},
   Hash                 $mirrors                   = {},
@@ -489,6 +491,14 @@ class aptly_profile(
   @@::apt::key { "aptly key ${::hostname}":
     id      => $key['fingerprint'],
     content => $key['public_key'],
+    tag     => $facts['fqdn'],
+  }
+
+  if $gpg_import_apt {
+    ::apt::key { "aptly key ${::hostname}-local":
+      id      => $key['fingerprint'],
+      content => $key['public_key'],
+    }
   }
 
   # Aptly expects the signing key to be in its GnuPG keyring
