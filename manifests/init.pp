@@ -65,7 +65,7 @@ class aptly_profile(
   Hash                 $publish_defaults          = {},
   Array[String]        $aptly_environment         = [],
   Stdlib::Absolutepath $insert_hello_script       = "${aptly_homedir}/insert_hello.sh",
-  Stdlib::ABsolutepath $aptly_cache_dir           = '/var/cache/aptly',
+  Stdlib::Absolutepath $aptly_cache_dir           = '/var/cache/aptly',
   Boolean              $insert_hello              = true,
   Boolean              $enable_api                = false,
   Boolean              $proxy_api                 = true,
