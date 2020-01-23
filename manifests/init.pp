@@ -12,6 +12,7 @@
 # @param manage_group       Manage the aptly group.
 # @param manage_homedir     Manage the homedir.
 # @param cleanup_script     String with path to cleanup script
+# @param manage_apache      Manage apache and vhost configuration.
 # @param cleanup_defaults   String with default options to pass on to a cleanup for a repo
 # @param gpg_uid            Configure the UID for a newly generated gpg key.
 # @param gpg_import_apt     Import the generated key in apt immediately.
