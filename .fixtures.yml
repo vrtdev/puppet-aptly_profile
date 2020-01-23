@@ -1,0 +1,18 @@
+fixtures:
+  repositories:
+    concat:
+      repo: 'https://github.com/puppetlabs/puppetlabs-concat.git'
+    cron_core:
+      repo: 'https://github.com/puppetlabs/puppetlabs-cron_core.git'
+    stdlib:
+      repo: "https://github.com/puppetlabs/puppetlabs-stdlib.git"
+    aptly:
+      repo: 'https://github.com/gds-operations/puppet-aptly.git'
+    apt:
+      repo: 'https://github.com/puppetlabs/puppetlabs-apt.git'
+    keypair:
+      repo: 'https://github.com/vrtdev/puppet-keypair.git'
+    apache:
+      repo: 'https://github.com/puppetlabs/puppetlabs-apache.git'
+  symlinks:
+    aptly_profile: "#{source_dir}"
