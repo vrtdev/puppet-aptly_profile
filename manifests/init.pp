@@ -11,7 +11,6 @@
 # @param manage_user        Manage the aptly user.
 # @param manage_group       Manage the aptly group.
 # @param manage_homedir     Manage the homedir.
-# @param cleanup_script     String with path to cleanup script
 # @param manage_apache      Manage apache and vhost configuration.
 # @param cleanup_defaults   String with default options to pass on to a cleanup for a repo
 # @param gpg_uid            Configure the UID for a newly generated gpg key.
@@ -26,7 +25,6 @@
 # @param repo_defaults      Hash with default properties to set on repos.
 # @param aptly_environment  An array with custom environment settings for the cron job.
 # @param publish_defaults   A hash with default properties to set on publishing points.
-# @param insert_hello_script  Override the location where to put the insert_hello script.
 # @param insert_hello Boolean indicating if you want te hello world package to be included
 #   in newly created repositories.
 # @param aptly_cache_dir    Directory where aptly can cache some data (the hello world package)
@@ -53,7 +51,6 @@ class aptly_profile(
   Boolean              $manage_group              = true,
   Boolean              $manage_homedir            = true,
   Boolean              $manage_apache             = true,
-  String               $cleanup_script            = "${aptly_homedir}/cleanup_repo.sh",
   String               $cleanup_defaults          = '--keep 5 --days 3650 --package all --noop',
   String               $gpg_uid                   = 'Aptly repo server signing key',
   Boolean              $gpg_import_apt            = false,
@@ -65,7 +62,6 @@ class aptly_profile(
   Hash                 $repo_defaults             = {},
   Hash                 $publish_defaults          = {},
   Array[String]        $aptly_environment         = [],
-  Stdlib::Absolutepath $insert_hello_script       = "${aptly_homedir}/insert_hello.sh",
   Stdlib::Absolutepath $aptly_cache_dir           = '/var/cache/aptly',
   Boolean              $insert_hello              = true,
   Boolean              $enable_api                = false,
@@ -80,6 +76,9 @@ class aptly_profile(
   Boolean              $api_enable_cli_and_http   = true,
   Boolean              $force_https_reverse_proxy = true,
 ){
+
+  $cleanup_script = "${aptly_homedir}/cleanup_repo.sh"
+  $insert_hello_script = "${aptly_homedir}/insert_hello.sh"
 
   # User, group and homedir
   #########################
