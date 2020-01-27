@@ -79,6 +79,7 @@ class aptly_profile(
 
   $cleanup_script = "${aptly_homedir}/cleanup_repo.sh"
   $insert_hello_script = "${aptly_homedir}/insert_hello.sh"
+  $api_listen = "${api_listen_ip}:${api_listen_port}"
 
   # User, group and homedir
   #########################
@@ -306,86 +307,20 @@ class aptly_profile(
   # Publishing
   ############
   if $manage_apache {
-    class { '::apache':
-      default_vhost => false,
-      default_mods  => false,
-    }
-
-    class { '::apache::mod::dir': }
-    class { '::apache::mod::autoindex': }
-    if $force_https_reverse_proxy {
-      class { '::apache::mod::rewrite': }
-      $https_rewrite_rules = [
-        {
-          'comment'      => 'Force https redirect for proxied requests (loadbalancer)',
-          'rewrite_cond' => ['%{HTTP:X-Forwarded-Proto} =http'],
-          'rewrite_rule' => ['. https://%{HTTP:Host}%{REQUEST_URI} [L,R=permanent]'],
-        },
-      ]
-    }
-    else {
-      $https_rewrite_rules = []
-    }
-
-    ::apache::vhost { 'aptly':
-      port           => 80,
-      docroot        => "${aptly_homedir}/public",
-      require        => File["${aptly_homedir}/public"],
-      manage_docroot => false,
-      rewrites       => $https_rewrite_rules,
+    class {'::aptly_profile::apache':
+      docroot                   => "${aptly_homedir}/public",
+      force_https_reverse_proxy => $force_https_reverse_proxy,
+      enable_api                => $enable_api,
+      api_vhost                 => $api_vhost,
+      proxy_api                 => $proxy_api,
+      api_listen                => $api_listen,
+      proxy_api_htpasswd_users  => $proxy_api_htpasswd_users,
     }
   }
 
   # API
   #####
   if $enable_api {
-    $api_listen = "${api_listen_ip}:${api_listen_port}"
-
-    if ($manage_apache and $proxy_api) {
-      $proxy_pass = [
-        {
-          'path' => '/',
-          'url' => "http://${api_listen}/"
-        },
-      ]
-      include ::apache::mod::auth_basic
-      include ::apache::mod::authn_core
-      include ::apache::mod::authn_file
-      include ::apache::mod::authz_user
-
-      $content = @(EOF)
-        <% $users.each |$usr, $pwd| { -%>
-        <%= $usr %>:<%= $pwd %>
-        <% } -%>
-        | EOF
-
-      file { '/var/www/.aptly-api-passwdfile':
-        ensure  => file,
-        content => inline_epp($content, {'users' => $proxy_api_htpasswd_users} ),
-        require => Class['Apache'],
-      }
-
-      ::apache::vhost { $api_vhost:
-        priority       => 50,
-        port           => 80,
-        manage_docroot => false,
-        proxy_pass     => $proxy_pass,
-        docroot        => '/var/www/html',
-        rewrites       => $https_rewrite_rules,
-        directories    => [
-          {
-            'provider'            => 'location',
-            'path'                => '/',
-            'auth_type'           => 'Basic',
-            'auth_name'           => 'api-access',
-            'auth_basic_provider' => 'file',
-            'auth_user_file'      => '/var/www/.aptly-api-passwdfile',
-            'auth_require'        => 'valid-user',
-          },
-        ],
-        require        => [File["${aptly_homedir}/public"],Apache::Vhost['aptly']],
-      }
-    } # end manage_apache and proxy_api
     class { '::aptly::api':
       ensure              => $api_ensure,
       user                => $api_user,
