@@ -213,6 +213,7 @@ class aptly_profile(
           $insert_hello_script, '--repo', $repo_name,
         ]),
         user        => $aptly_user,
+        cwd         => $aptly_homedir,
         refreshonly => true,
         subscribe   => Exec["aptly_repo_create-${repo_name}"],
         require     => File[$insert_hello_script],
