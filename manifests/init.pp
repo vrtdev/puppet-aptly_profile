@@ -161,7 +161,7 @@ class aptly_profile(
   # Pass through the aptly_environment to the execs used for mirroring
   $mirrors.each |$mirror_name, $mirror_config| {
     ::aptly_profile::delayed_mirror {$mirror_name:
-      config => $mirror_config,
+      config => merge($mirror_config, $_mirror_defaults)
     }
   }
 
