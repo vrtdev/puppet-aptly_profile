@@ -273,11 +273,12 @@ class aptly_profile(
   $mirror_d  = "${aptly_homedir}/mirror.d"
 
   file {[$publish_d, $mirror_d]:
-    ensure => 'directory',
-    owner  => $aptly_user,
-    group  => $aptly_group,
-    mode   => '0755',
-    purge  => true,
+    ensure  => 'directory',
+    owner   => $aptly_user,
+    group   => $aptly_group,
+    mode    => '0755',
+    purge   => true,
+    recurse => true,
   }
 
   file {["${publish_d}/00_CONTENTS_WARNING", "${mirror_d}/00_CONTENTS_WARNING"]:
